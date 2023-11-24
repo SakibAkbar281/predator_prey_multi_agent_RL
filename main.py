@@ -129,7 +129,7 @@ ACTIONS = [Vector2(1, 0), Vector2(-1, 0), Vector2(0, 1), Vector2(0, -1)]
 
 all_sprites = pygame.sprite.Group()
 
-n_tigers = 2
+n_tigers = 3
 n_deers = 3
 tiger_group = pygame.sprite.Group()
 deer_group = pygame.sprite.Group()
