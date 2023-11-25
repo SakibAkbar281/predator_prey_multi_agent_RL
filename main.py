@@ -30,9 +30,9 @@ tiger_win_text = Text("Tigers win")
 # Training
 num_episodes = 1000
 num_steps = N_STEPS
-env.load(tiger_q_file='tiger_q.pkl',deer_q_file='deer_q.pkl')
-# env.training(num_episodes, num_steps)
-# env.save()
+# env.load(tiger_q_file='tiger_q.pkl',deer_q_file='deer_q.pkl')
+env.training(num_episodes, num_steps)
+env.save()
 
 # display aggregate scores
 tiger_scores = 0

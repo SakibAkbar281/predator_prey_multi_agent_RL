@@ -43,11 +43,11 @@ class Env:
             if deer.got_caught:
                 deer.kill()
         for tiger_index, tiger in enumerate(self.tiger_group):
-            tiger_move = tiger.choose(state, tiger_rewards[tiger_index])
+            tiger_move = tiger.choose(state, tiger.reward)
             tiger.update(tiger_move, self.all_sprites)
             self.tiger_Qs.update(tiger.Q)
         for deer_index, deer in enumerate(self.deer_group):
-            deer_move = deer.choose(state, deer_rewards[deer_index])
+            deer_move = deer.choose(state, deer.reward)
             deer.update(deer_move, self.all_sprites)
             self.deer_Qs.update(deer.Q)
             if deer.check_captured(self.tiger_group):  # and not self.is_training:
