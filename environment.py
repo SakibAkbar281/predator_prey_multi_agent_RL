@@ -65,11 +65,15 @@ class Env:
         deer_rewards = []
         for tiger in self.tiger_group:
             tiger.reward = PREDATOR_COST_PER_MOVE * \
-                           max([tiger.get_distance(other=deer) for deer in self.deer_group] if len(self.deer_group)!=0 else [0]) // 100
+                           sum([tiger.get_distance(other=deer)
+                                for deer in self.deer_group]
+                               if len(self.deer_group)!=0
+                               else [0]) // 100
 
         for deer in self.deer_group:
             deer.reward = PREY_REWARD_MOVE * \
-                          min([deer.get_distance(other=tiger) for tiger in self.tiger_group]) // 100
+                          sum([deer.get_distance(other=tiger)
+                               for tiger in self.tiger_group]) // 100
             if deer.check_captured(self.tiger_group):
                 deer.reward += PREY_COST_CAPTURED
                 for tiger in self.tiger_group:
@@ -124,7 +128,7 @@ class Env:
             self.update_epsilon(episode, num_episodes)
             for steps in range(num_steps):
                 self.transition()
-                if steps % 100 == 0:
+                if steps % 10 == 0:
                     print(f'Episode: {episode} Steps: {steps} '
                           # f'\nDeer Epsilon: {[deer.epsilon for deer in self.deer_group]}'
                           f'\nTigers: {len(self.tiger_group)} Deer: {len(self.deer_group)}'
@@ -142,6 +146,9 @@ class Env:
                 deer_wins += 1
                 print(f'deer wins {deer_wins} times.')
                 print('____________')
+
+            if episode % 1000 ==0:
+                self.save()
             self.reset()
         self.is_training = False
 

@@ -95,9 +95,11 @@ class Tiger(Agent):
 class Deer(Agent):
     def __init__(self,ground):
         super().__init__('deer.png', width=100, height=100,ground=ground)
-        self.speed = 200
-        self.allowable_actions = [Vector2(1, 0), Vector2(-1, 0), Vector2(0, 1), Vector2(0, -1),
-                                  Vector2(1, 1), Vector2(-1, -1), Vector2(1, -1), Vector2(-1, 1)]
+        self.speed = 100
+        self.allowable_actions = [Vector2(1, 0), Vector2(-1, 0),
+                                  Vector2(0, 1), Vector2(0, -1),
+                                  math.sqrt(2)*Vector2(1, 1), math.sqrt(2)*Vector2(-1, -1),
+                                  math.sqrt(2)*Vector2(1, -1), math.sqrt(2)*Vector2(-1, 1)]
         self.action_indices = range(len(self.allowable_actions))
         self.got_caught = False
     def check_captured(self, tiger_group):
