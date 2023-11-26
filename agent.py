@@ -3,6 +3,7 @@ import pygame
 from pygame.math import Vector2
 import math
 from config import *
+from utils import *
 class Agent(pygame.sprite.Sprite):
     def __init__(self, image_path, width, height, ground):
         super().__init__()
@@ -97,9 +98,11 @@ class Deer(Agent):
         super().__init__('deer.png', width=100, height=100,ground=ground)
         self.speed = 100
         self.allowable_actions = [Vector2(1, 0), Vector2(-1, 0),
-                                  Vector2(0, 1), Vector2(0, -1),
-                                  math.sqrt(2)*Vector2(1, 1), math.sqrt(2)*Vector2(-1, -1),
-                                  math.sqrt(2)*Vector2(1, -1), math.sqrt(2)*Vector2(-1, 1)]
+                                  Vector2(0, 1), Vector2(0, -1)]
+        # self.allowable_actions = [Vector2(1, 0), Vector2(-1, 0),
+        #                           Vector2(0, 1), Vector2(0, -1),
+        #                           Vector2(1, 1), Vector2(-1, -1),
+        #                           Vector2(1, -1), Vector2(-1, 1)]
         self.action_indices = range(len(self.allowable_actions))
         self.got_caught = False
     def check_captured(self, tiger_group):
@@ -110,3 +113,39 @@ class Deer(Agent):
         # if n_close_tigers >= 2:
         #     self.got_caught = True
         return n_close_tigers >= 2
+
+
+class TigerGroup(pygame.sprite.Group):
+    def __init__(self, *sprites):
+        super().__init__(*sprites)
+
+    def is_coordinated(self, deer_group):
+
+        for deer in deer_group:
+            # Calculate angles or positions relative to the deer for each tiger
+            # Example: Check if tigers are approaching from different angles
+            angles = []
+            for tiger in self.sprites():
+                angle = calculate_angle(tiger, deer)  # Define this function
+                angles.append(angle)
+            # print(angles)
+            # Check if the angles are sufficiently different (e.g., more than 90 degrees apart)
+            if not is_sufficiently_different(angles):  # Define this function
+                return False
+        return True
+
+    def is_well_spaced(self):
+        optimal_min_distance = MINIMUM_PREDATOR_DISTANCE  # Minimum optimal distance
+        optimal_max_distance = MAXIMUM_PREDATOR_DISTANCE  # Maximum optimal distance
+
+        for tiger1 in self.sprites():
+            for tiger2 in self.sprites():
+                if tiger1 != tiger2:
+                    distance = tiger1.get_distance(tiger2)
+                    if distance > optimal_max_distance: #or distance < optimal_min_distance
+                        return False
+        return True
+
+class DeerGroup(pygame.sprite.Group):
+    def __init__(self, *sprites):
+        super().__init__(*sprites)

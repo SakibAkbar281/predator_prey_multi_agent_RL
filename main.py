@@ -18,7 +18,7 @@ clock = pygame.time.Clock()
 
 # Creating agents
 n_tigers = 2
-n_deers = 2
+n_deers = 1
 env = Env(ground=ground)
 env.add(n_tigers, n_deers)
 
@@ -28,11 +28,12 @@ deer_win_text = Text("Deer win")
 tiger_win_text = Text("Tigers win")
 
 # Training
-num_episodes = 1000
+num_episodes = 5000
 num_steps = N_STEPS
 # env.load(tiger_q_file='tiger_q.pkl',deer_q_file='deer_q.pkl')
-env.training(num_episodes, num_steps)
-env.save()
+# env.load(tiger_q_file='tiger_q_untrained.pkl',deer_q_file='deer_q_untrained.pkl')
+env.training(num_episodes, num_steps, deer_epsilon=1, tiger_epsilon=0.4)
+env.save(tiger_q_file='tiger_q_trained.pkl',deer_q_file='deer_q_untrained.pkl')
 
 # display aggregate scores
 tiger_scores = 0
