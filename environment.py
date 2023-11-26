@@ -3,7 +3,7 @@ import random
 
 from agent import *
 from config import *
-
+from background import *
 
 class Env:
     def __init__(self, ground):  # create tigers and deers
@@ -18,7 +18,7 @@ class Env:
         self.n_tigers = 0
         self.n_deers = 0
         self.steps = 0
-        self.is_training = False
+        self.is_simulating = False
 
     def add(self, n_tigers, n_deers):
         self.tigers = self._create_agents(Tiger, n_tigers,
@@ -43,17 +43,25 @@ class Env:
             if deer.got_caught:
                 deer.kill()
         for tiger_index, tiger in enumerate(self.tiger_group):
-            tiger_move = tiger.choose(state, tiger.reward)
+            if not self.is_simulating:
+                tiger_move = tiger.choose(state, tiger.reward)
+            else:
+                tiger_move = tiger.choose_without_learning(state)
             tiger.update(tiger_move, self.all_sprites)
-            self.tiger_Qs.update(tiger.Q)
+            if not self.is_simulating:
+                self.tiger_Qs.update(tiger.Q)
+
             # print(f'Tiger {tiger_index+1} moved to {tiger.pos}')
         for deer_index, deer in enumerate(self.deer_group):
-            deer_move = deer.choose(state, deer.reward)
+            if not self.is_simulating:
+                deer_move = deer.choose(state, deer.reward)
+            else:
+                deer_move = deer.choose_without_learning(state)
             deer.update(deer_move, self.all_sprites)
-            self.deer_Qs.update(deer.Q)
+            if not self.is_simulating:
+                self.deer_Qs.update(deer.Q)
             if deer.check_captured(self.tiger_group):  # and not self.is_training:
                 deer.got_caught = True
-            # print(f'Deer {deer_index+1} moved to {deer.pos}')
 
         return tiger_rewards, deer_rewards
 
@@ -132,36 +140,31 @@ class Env:
             agents.append(agent)
         return agents
 
-    def update_epsilon(self, current_episode, num_episodes, deer_epsilon=0.4, tiger_epsilon=0.4):
+    def update_epsilon(self, deer_epsilon=0.4, tiger_epsilon=0.4, diminish_with_episode=False, current_episode=1, num_episodes=1):
         for deer in self.deer_group:
-            if deer_epsilon !=1:
+            if diminish_with_episode:
                 deer.epsilon = deer_epsilon * (1 - current_episode / (num_episodes + 1))  # 0.4*(1-i/(Neps+1));%0.5*(i)^(-1/3);
             else:
-                deer.epsilon = 1
+                deer.epsilon = deer_epsilon
 
         for tiger in self.tiger_group:
-            if tiger_epsilon != 1:
+            if diminish_with_episode:
                 tiger.epsilon = tiger_epsilon * (1 - current_episode / (num_episodes + 1))  # 0.4*(1-i/(Neps+1));%0.5*(i)^(-1/3);
             else:
-                tiger.epsilon = 1
+                tiger.epsilon = tiger_epsilon
 
     def training(self, num_episodes, num_steps, deer_epsilon = 0.4, tiger_epsilon = 0.4):
-        self.is_training = True
         tiger_wins = 0
         deer_wins = 0
         for episode in range(num_episodes):
-            self.update_epsilon(episode, num_episodes, deer_epsilon, tiger_epsilon)
-            for steps in range(num_steps):
+            self.update_epsilon(deer_epsilon=deer_epsilon,
+                                tiger_epsilon= tiger_epsilon,
+                                diminish_with_episode=True,
+                                current_episode= episode,
+                                num_episodes= num_episodes)
+            for step in range(num_steps):
                 self.transition()
-                # if steps % 10 == 0:
-                #     print(f'Episode: {episode} Steps: {steps} '
-                #           # f'\nDeer Epsilon: {[deer.epsilon for deer in self.deer_group]}'
-                #           f'\nTigers: {len(self.tiger_group)} Deer: {len(self.deer_group)}'
-                #           # f'\nTiger Q_dictionary Length {len(self.tiger_Qs)},'
-                #           # f'\nDeer Q_dictionary Length {len(self.deer_Qs)}'
-                #           f'\n_______________')
                 if len(self.deer_group) == 0:
-                    # print('No more deer')
                     break
             if self.tiger_wins():
                 tiger_wins += 1
@@ -171,11 +174,78 @@ class Env:
                 print(f'Episode {episode+1}  tiger : deer = {100*tiger_wins/(episode+1)}% : {100*deer_wins/(episode+1)} %.'
                       f'\nTiger visited {(len(self.tiger_Qs)-1)/4} states,'
                       f'\nDeer visited {(len(self.deer_Qs)-1)/4} states')
-
             if episode % 1000 ==0:
                 self.save()
             self.reset()
-        self.is_training = False
+
+    def run_game(self, screen, fps=10):
+        # Time
+        clock = pygame.time.Clock()
+        deer_win_text = Text("Deer win")
+        tiger_win_text = Text("Tigers win")
+        tiger_scores = 0
+        deer_scores = 0
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
+            screen.blit(self.ground(), dest=(0, 0))
+            tiger_reward_list, deer_reward_list = self.transition()
+            tiger_scores += sum(tiger_reward_list)
+            deer_scores += sum(deer_reward_list)
+
+            self.all_sprites.draw(screen)  # Draw all sprites
+            score_tigers = Text(f'Tiger Score: {tiger_scores}')
+            score_deers = Text(f'Deer Score: {deer_scores}')
+            steps_text = Text(f"Steps: {self.steps}")
+            screen.blit(score_tigers(), dest=(10, 10))
+            screen.blit(score_deers(), dest=(10, 50))
+            screen.blit(steps_text(), dest=(WIDTH - steps_text.get_size().x - 10, 10))
+
+            # Check for game end conditions
+            if self.game_over():
+                if self.tiger_wins():
+                    screen.blit(tiger_win_text(), dest=tiger_win_text.center_of(self.ground.rect))
+                else:
+                    screen.blit(deer_win_text(), dest=deer_win_text.center_of(self.ground.rect))
+                pygame.display.update()
+                pygame.time.delay(5000)
+                pygame.quit()
+                exit()
+
+            pygame.display.update()
+            clock.tick(fps)
+    def simulate(self, num_games):
+        tiger_wins = 0
+        deer_wins = 0
+        self.is_simulating = True
+        for game in range(num_games):
+            for step in range(N_STEPS):
+                self.transition()
+                if len(self.deer_group) == 0:
+                    break
+            if self.tiger_wins():
+                tiger_wins += 1
+            else:
+                deer_wins += 1
+            if (game + 1) % 10 == 0:
+                print(
+                    f'Episode {game + 1}  tiger : deer '
+                    f'= {100 * tiger_wins / (game + 1)}% : {100 * deer_wins / (game + 1)} %.')
+            self.reset()
+        self.is_simulating = False
+
+        winning_ratio = 100 * tiger_wins / num_games, 100 * deer_wins/num_games
+        return winning_ratio
+    def training_step(self):
+        pass
+    def calculate_winning_ratio(self):
+        pass
+    def plot_winning_ratio(self):
+        pass
+    def plot_states_visited(self):
+        pass
 
     def tiger_wins(self):
         return len(self.deer_group) == 0
@@ -195,5 +265,5 @@ class Env:
         with open(deer_q_file, 'rb') as f:
             self.deer_Qs = pickle.load(f)
         print(f'Loaded successfully. '
-              f'\nLength of tiger_q dict: {len(self.tiger_Qs)}'
-              f'\nLength of deer_q dict : {len(self.deer_Qs)}')
+              f'\nTiger visited {(len(self.tiger_Qs)-1)/4} states'
+              f'\nDeer visited  {(len(self.deer_Qs)-1)/4} states')

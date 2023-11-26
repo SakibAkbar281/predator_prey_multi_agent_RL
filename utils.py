@@ -33,6 +33,8 @@ def is_sufficiently_different(angles, threshold=85):
                 return False
     return True
 
+
+
 if __name__=="__main__":
     angles = [30, 30, 270]  # Example list of angles
     if is_sufficiently_different(angles):
