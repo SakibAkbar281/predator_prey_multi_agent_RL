@@ -1,9 +1,10 @@
 import pickle
 import random
-
+import matplotlib.pyplot as plt
 from agent import *
 from config import *
 from background import *
+
 
 class Env:
     def __init__(self, ground):  # create tigers and deers
@@ -118,7 +119,7 @@ class Env:
     def get_state(self):
         tiger_positions = frozenset({tuple(tiger.pos) for tiger in self.tiger_group})
         deer_positions = frozenset({tuple(deer.pos) for deer in self.deer_group})
-        return hash((tiger_positions,deer_positions))
+        return hash((tiger_positions, deer_positions))
 
     def _create_agents(self, agent_class, count, all_sprites, specific_group):
         agents = []
@@ -126,11 +127,11 @@ class Env:
         for _ in range(count):
             agent = agent_class(ground=self.ground)
             while True:
-                max_x = (WIDTH+50)//100
-                max_y = (HEIGHT+50)//100
-                x_coordinates = [50+100*x for x in range(max_x)]
-                y_coordinates = [50+100*x for x in range(max_y)]
-                init_pos = Vector2(random.choice(x_coordinates),random.choice(y_coordinates))
+                max_x = (WIDTH + 50) // 100
+                max_y = (HEIGHT + 50) // 100
+                x_coordinates = [50 + 100 * x for x in range(max_x)]
+                y_coordinates = [50 + 100 * x for x in range(max_y)]
+                init_pos = Vector2(random.choice(x_coordinates), random.choice(y_coordinates))
                 agent.set_pos(init_pos)
                 if not agent.is_obstructed(agent.rect, all_sprites):
                     # print(f'A {agent.__class__} landed on {init_pos}')
@@ -140,28 +141,31 @@ class Env:
             agents.append(agent)
         return agents
 
-    def update_epsilon(self, deer_epsilon=0.4, tiger_epsilon=0.4, diminish_with_episode=False, current_episode=1, num_episodes=1):
+    def update_epsilon(self, deer_epsilon=0.4, tiger_epsilon=0.4, diminish_with_episode=False, current_episode=1,
+                       num_episodes=1):
         for deer in self.deer_group:
             if diminish_with_episode:
-                deer.epsilon = deer_epsilon * (1 - current_episode / (num_episodes + 1))  # 0.4*(1-i/(Neps+1));%0.5*(i)^(-1/3);
+                deer.epsilon = deer_epsilon * (
+                            1 - current_episode / (num_episodes + 1))  # 0.4*(1-i/(Neps+1));%0.5*(i)^(-1/3);
             else:
                 deer.epsilon = deer_epsilon
 
         for tiger in self.tiger_group:
             if diminish_with_episode:
-                tiger.epsilon = tiger_epsilon * (1 - current_episode / (num_episodes + 1))  # 0.4*(1-i/(Neps+1));%0.5*(i)^(-1/3);
+                tiger.epsilon = tiger_epsilon * (
+                            1 - current_episode / (num_episodes + 1))  # 0.4*(1-i/(Neps+1));%0.5*(i)^(-1/3);
             else:
                 tiger.epsilon = tiger_epsilon
 
-    def training(self, num_episodes, num_steps, deer_epsilon = 0.4, tiger_epsilon = 0.4):
+    def training(self, num_episodes, num_steps, deer_epsilon=0.4, tiger_epsilon=0.4):
         tiger_wins = 0
         deer_wins = 0
         for episode in range(num_episodes):
             self.update_epsilon(deer_epsilon=deer_epsilon,
-                                tiger_epsilon= tiger_epsilon,
+                                tiger_epsilon=tiger_epsilon,
                                 diminish_with_episode=True,
-                                current_episode= episode,
-                                num_episodes= num_episodes)
+                                current_episode=episode,
+                                num_episodes=num_episodes)
             for step in range(num_steps):
                 self.transition()
                 if len(self.deer_group) == 0:
@@ -170,11 +174,12 @@ class Env:
                 tiger_wins += 1
             else:
                 deer_wins += 1
-            if (episode+1) % 10 ==0:
-                print(f'Episode {episode+1}  tiger : deer = {100*tiger_wins/(episode+1)}% : {100*deer_wins/(episode+1)} %.'
-                      f'\nTiger visited {(len(self.tiger_Qs)-1)/4} states,'
-                      f'\nDeer visited {(len(self.deer_Qs)-1)/4} states')
-            if episode % 1000 ==0:
+            if (episode + 1) % 10 == 0:
+                print(
+                    f'Episode {episode + 1}  tiger : deer = {100 * tiger_wins / (episode + 1)}% : {100 * deer_wins / (episode + 1)} %.'
+                    f'\nTiger visited {(len(self.tiger_Qs) - 1) / 4} states,'
+                    f'\nDeer visited {(len(self.deer_Qs) - 1) / 4} states')
+            if episode % 1000 == 0:
                 self.save()
             self.reset()
 
@@ -216,9 +221,13 @@ class Env:
 
             pygame.display.update()
             clock.tick(fps)
+
     def simulate(self, num_games):
         tiger_wins = 0
         deer_wins = 0
+        tiger_wh = []
+        deer_wh = []
+        game_h = []
         self.is_simulating = True
         for game in range(num_games):
             for step in range(N_STEPS):
@@ -229,21 +238,33 @@ class Env:
                 tiger_wins += 1
             else:
                 deer_wins += 1
+            tiger_wr = 100 * tiger_wins / (game + 1)
+            deer_wr = 100 * deer_wins / (game + 1)
+            tiger_wh.append(tiger_wr)
+            deer_wh.append(deer_wr)
+            game_h.append(game + 1)
             if (game + 1) % 10 == 0:
                 print(
-                    f'Episode {game + 1}  tiger : deer '
-                    f'= {100 * tiger_wins / (game + 1)}% : {100 * deer_wins / (game + 1)} %.')
+                    f'Game {game + 1}  tiger : deer '
+                    f'= {tiger_wr}% : {deer_wr} %.')
+            if (game) % 100 == 0:
+                self.plot_winning_ratio(game_h,tiger_wh,deer_wh)
             self.reset()
         self.is_simulating = False
 
-        winning_ratio = 100 * tiger_wins / num_games, 100 * deer_wins/num_games
+        winning_ratio = 100 * tiger_wins / num_games, 100 * deer_wins / num_games
         return winning_ratio
+
     def training_step(self):
         pass
-    def calculate_winning_ratio(self):
-        pass
-    def plot_winning_ratio(self):
-        pass
+
+    def plot_winning_ratio(self, game_history, tiger_winning_history, deer_winning_history):
+        fig, ax = plt.subplots(1,1, figsize=(4,4))
+        ax.plot(game_history, tiger_winning_history)
+        ax.plot(game_history, deer_winning_history)
+        fig.show()
+
+
     def plot_states_visited(self):
         pass
 
@@ -253,7 +274,7 @@ class Env:
     def game_over(self):
         return len(self.deer_group) == 0 or self.steps >= N_STEPS
 
-    def save(self, tiger_q_file = 'tiger_q.pkl', deer_q_file='deer_q.pkl'):
+    def save(self, tiger_q_file='tiger_q.pkl', deer_q_file='deer_q.pkl'):
         with open(tiger_q_file, 'wb') as f:
             pickle.dump(self.tiger_Qs, f)
         with open(deer_q_file, 'wb') as f:
@@ -265,5 +286,5 @@ class Env:
         with open(deer_q_file, 'rb') as f:
             self.deer_Qs = pickle.load(f)
         print(f'Loaded successfully. '
-              f'\nTiger visited {(len(self.tiger_Qs)-1)/4} states'
-              f'\nDeer visited  {(len(self.deer_Qs)-1)/4} states')
+              f'\nTiger visited {(len(self.tiger_Qs) - 1) / 4} states'
+              f'\nDeer visited  {(len(self.deer_Qs) - 1) / 4} states')
