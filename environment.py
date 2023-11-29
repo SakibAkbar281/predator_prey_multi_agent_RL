@@ -296,17 +296,17 @@ class Env:
     def game_over(self):
         return len(self.deer_group) == 0 or self.steps >= self.n_steps
 
-    def save(self, tiger_q_file='tiger_q.pkl', deer_q_file='deer_q.pkl'):
-        with open(tiger_q_file, 'wb') as f:
+    def save(self, tiger_q_file='tq.pkl', deer_q_file='dq.pkl', path='./'):
+        with open(path+tiger_q_file, 'wb') as f:
             pickle.dump(self.tiger_Qs, f)
-        with open(deer_q_file, 'wb') as f:
+        with open(path+deer_q_file, 'wb') as f:
             pickle.dump(self.deer_Qs, f)
 
 
-    def load(self, tiger_q_file, deer_q_file):
-        with open(tiger_q_file, 'rb') as f:
+    def load(self, tiger_q_file='tq.pkl', deer_q_file='dq.pkl',path='./'):
+        with open(path+tiger_q_file, 'rb') as f:
             self.tiger_Qs = pickle.load(f)
-        with open(deer_q_file, 'rb') as f:
+        with open(path+deer_q_file, 'rb') as f:
             self.deer_Qs = pickle.load(f)
         print(f'Loaded successfully. '
               f'\nTiger visited {(len(self.tiger_Qs) - 1) / 4} states'

@@ -45,8 +45,8 @@ env.add(n_tigers, n_deers)
 # Training
 num_episodes = 2000
 env.set_n_steps(n_steps)
-#
+
 env.set_deer_epsilon(deer_epsilon=deer_epsilon)
 env.set_tiger_epsilon(tiger_epsilon=tiger_epsilon)
 env.training(num_episodes, case=case_name)
-env.save(tiger_q_file='tq.pkl', deer_q_file='dq.pkl')
+env.save(tiger_q_file='tq.pkl', deer_q_file='dq.pkl', path=folder_path)
