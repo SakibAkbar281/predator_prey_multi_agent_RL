@@ -80,23 +80,18 @@ class Env:
             closest_deer_distance = min([tiger.get_distance(deer) for deer in self.deer_group], default=0)
             tiger.reward = PREDATOR_COST_PER_MOVE * closest_deer_distance // 100
             # Coordination and teamwork bonuses
-
-            if self.tiger_group.is_well_spaced():  # Define this method to check optimal spacing
+            if self.tiger_group.is_well_spaced():
                 tiger.reward += TEAMWORK_BONUS
-                if self.tiger_group.is_coordinated(
-                        self.deer_group):  # Define this method to check for strategic positioning
+                if self.tiger_group.is_coordinated(self.deer_group):  #
                     tiger.reward += COORDINATION_BONUS
-                    # print('Tiger group is coordinated')
                 else:
                     tiger.reward += NOT_COORDINATION_PENALTY
-                    # print('Tiger group is not coordinated')
-                # print('Tiger group is well spaced')
 
             # Capture reward
 
         for deer in self.deer_group:
             deer.reward = PREY_REWARD_MOVE * \
-                          sum([deer.get_distance(other=tiger)
+                          min([deer.get_distance(other=tiger)
                                for tiger in self.tiger_group]) // 100
             if deer.check_captured(self.tiger_group):
                 deer.reward += PREY_COST_CAPTURED
@@ -160,6 +155,8 @@ class Env:
     def training(self, num_episodes, num_steps, deer_epsilon=0.4, tiger_epsilon=0.4):
         tiger_wins = 0
         deer_wins = 0
+        tiger_wins_list = []
+        episode_list = []
         for episode in range(num_episodes):
             self.update_epsilon(deer_epsilon=deer_epsilon,
                                 tiger_epsilon=tiger_epsilon,
@@ -247,7 +244,7 @@ class Env:
                 print(
                     f'Game {game + 1}  tiger : deer '
                     f'= {tiger_wr}% : {deer_wr} %.')
-            if (game) % 100 == 0:
+            if game % 100 == 0:
                 self.plot_winning_ratio(game_h,tiger_wh,deer_wh)
             self.reset()
         self.is_simulating = False
@@ -279,6 +276,7 @@ class Env:
             pickle.dump(self.tiger_Qs, f)
         with open(deer_q_file, 'wb') as f:
             pickle.dump(self.deer_Qs, f)
+
 
     def load(self, tiger_q_file, deer_q_file):
         with open(tiger_q_file, 'rb') as f:
