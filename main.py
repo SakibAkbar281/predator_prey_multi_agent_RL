@@ -4,7 +4,7 @@ from environment import *
 pygame.init()
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Predator Prey RL")
+pygame.display.set_caption("Multi-agent RL Predator Prey")
 clock = pygame.time.Clock()
 # Background
 ground = Background('ground.jpg', width=WIDTH, height=HEIGHT)

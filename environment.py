@@ -247,7 +247,7 @@ class Env:
                 print(
                     f'Game {game + 1}  tiger : deer '
                     f'= {tiger_wr}% : {deer_wr} %.')
-            if (game) % 100 == 0:
+            if game % 100 == 0:
                 self.plot_winning_ratio(game_h,tiger_wh,deer_wh)
             self.reset()
         self.is_simulating = False
@@ -260,8 +260,11 @@ class Env:
 
     def plot_winning_ratio(self, game_history, tiger_winning_history, deer_winning_history):
         fig, ax = plt.subplots(1,1, figsize=(4,4))
-        ax.plot(game_history, tiger_winning_history)
-        ax.plot(game_history, deer_winning_history)
+        ax.plot(game_history, tiger_winning_history, label='Tiger Winning Ratio')
+        ax.plot(game_history, deer_winning_history, label='Deer Winning Ratio')
+        ax.legend()
+        ax.set_xlabel('Number of Games')
+        ax.set_ylabel('Winning Ratio')
         fig.show()
 
 
