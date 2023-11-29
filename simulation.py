@@ -4,22 +4,24 @@ from environment import *
 pygame.init()
 
 
-# Specify the case number
-case = 1
-sim_case = 1
+# Specify the game_case number
+game_case = '2tiger2deer30steps'
+sim_case = 'none'
 
-# Extract parameters based on the chosen case
-n_tigers = CASES[case]["n_tigers"]
-n_deers = CASES[case]["n_deers"]
-n_steps = CASES[case]["n_steps"]
+# Extract parameters based on the chosen game_case
+n_tigers = GAME_CASES[game_case]["n_tigers"]
+n_deers = GAME_CASES[game_case]["n_deers"]
+n_steps = GAME_CASES[game_case]["n_steps"]
 
 # Train Cases
 deer_epsilon = SIM_CASES[sim_case]['deer_epsilon']
 tiger_epsilon = SIM_CASES[sim_case]['tiger_epsilon']
 case_name = SIM_CASES[sim_case]['case_name']
 
-folder_path = './' + CASES[case]["folder_name"] + '/' + SIM_CASES[sim_case]["folder_name"] + '/sim/'
-folder_train_path = './' + CASES[case]["folder_name"] + '/' + SIM_CASES[sim_case]["folder_name"] + '/train/'
+folder_path = './' + GAME_CASES[game_case]["folder_name"] + '/' + SIM_CASES[sim_case]["folder_name"] + '/sim/'
+folder_train_path = './' + GAME_CASES[game_case]["folder_name"] + '/' + SIM_CASES[sim_case]["folder_name"] + '/train/'
+
+
 makedir(folder_path=folder_path)
 makedir(folder_path=folder_train_path)
 
@@ -41,5 +43,5 @@ env.set_tiger_epsilon(tiger_epsilon=tiger_epsilon)
 
 # Simulation
 env.load(tiger_q_file='tq.pkl', deer_q_file='dq.pkl', path=folder_train_path)
-tiger_wr, deer_wr = env.simulate(num_games=1000, path=folder_path)
+tiger_wr, deer_wr = env.simulate(num_games=5000, path=folder_path)
 print(f'final winning ratio: {tiger_wr} : {deer_wr}')

@@ -3,21 +3,21 @@ from environment import *
 # Initialization Code
 pygame.init()
 
-# Specify the case number
-case = 1
-train_case = 1
+# Specify the game_case number
+game_case = '2tiger2deer30steps'
+train_case = 'none'
 
-# Extract parameters based on the chosen case
-n_tigers = CASES[case]["n_tigers"]
-n_deers = CASES[case]["n_deers"]
-n_steps = CASES[case]["n_steps"]
+# Extract parameters based on the chosen game_case
+n_tigers = GAME_CASES[game_case]["n_tigers"]
+n_deers = GAME_CASES[game_case]["n_deers"]
+n_steps = GAME_CASES[game_case]["n_steps"]
 
 # Train Cases
 deer_epsilon = TRAIN_CASES[train_case]['deer_epsilon']
 tiger_epsilon = TRAIN_CASES[train_case]['tiger_epsilon']
 case_name = TRAIN_CASES[train_case]['case_name']
 
-folder_path = './' + CASES[case]["folder_name"] + '/' + TRAIN_CASES[train_case]["folder_name"] + '/train/'
+folder_path = './' + GAME_CASES[game_case]["folder_name"] + '/' + TRAIN_CASES[train_case]["folder_name"] + '/train/'
 makedir(folder_path=folder_path)
 
 
@@ -30,7 +30,7 @@ env = Env(ground=ground)
 env.add(n_tigers, n_deers)
 
 # Training
-num_episodes = 100
+num_episodes = 1
 env.set_n_steps(n_steps)
 
 env.set_deer_epsilon(deer_epsilon=deer_epsilon)

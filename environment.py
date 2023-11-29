@@ -188,7 +188,7 @@ class Env:
 
             hist["tiger_wins"].append(tiger_wins)
             hist["deer_wins"].append(deer_wins)
-            hist["num_games"].append(episode)
+            hist["num_games"].append(episode+1)
 
             if (episode + 1) % 10 == 0:
                 print(
@@ -258,7 +258,7 @@ class Env:
             deer_wr = 100 * deer_wins / (game + 1)
             hist["tiger_wins"].append(tiger_wins)
             hist["deer_wins"].append(deer_wins)
-            hist["num_games"].append(game)
+            hist["num_games"].append(game+1)
             if (game + 1) % 10 == 0:
                 print(f'Game {game + 1}  tiger : deer = {tiger_wr}% : {deer_wr} %.')
                 save_file(hist, filename='hist.pkl',path=path)

@@ -1,25 +1,25 @@
 WIDTH, HEIGHT = 500, 500
 
 # Cases
-CASES = {
-    1: {"n_tigers": 2, "n_deers": 1, "n_steps": 50, "folder_name":'2t1d50'},
-    2: {"n_tigers": 2, "n_deers": 1, "n_steps": 30, "folder_name":'2t1d30'},
-    3: {"n_tigers": 2, "n_deers": 2, "n_steps": 50, "folder_name":'2t2d50'},
-    4: {"n_tigers": 2, "n_deers": 2, "n_steps": 30, "folder_name":'2t2d30'}
+GAME_CASES = {
+    '2tiger1deer50steps': {"n_tigers": 2, "n_deers": 1, "n_steps": 50, "folder_name":'2t1d50'},
+    '2tiger1deer30steps': {"n_tigers": 2, "n_deers": 1, "n_steps": 30, "folder_name":'2t1d30'},
+    '2tiger2deer50steps': {"n_tigers": 2, "n_deers": 2, "n_steps": 50, "folder_name":'2t2d50'},
+    '2tiger2deer30steps': {"n_tigers": 2, "n_deers": 2, "n_steps": 30, "folder_name":'2t2d30'}
 }
 
 TRAIN_CASES={
-    1: {'case_name':'only tiger',    'deer_epsilon':1, 'tiger_epsilon':0.4, 'folder_name':'ttud'},
-    2: {'case_name':'only deer',     'deer_epsilon':0.4, 'tiger_epsilon':1,  'folder_name':'uttd'},
-    3: {'case_name': 'both',        'deer_epsilon': 0.4,   'tiger_epsilon': 0.4,  'folder_name':'tttd'},
-    4: {'case_name': 'none',        'deer_epsilon': 1,   'tiger_epsilon': 1,  'folder_name':'utud'},
+    'only_tiger': {'case_name':'only tiger',    'deer_epsilon':1, 'tiger_epsilon':0.4, 'folder_name':'ttud'},
+    'only_deer': {'case_name':'only deer',     'deer_epsilon':0.4, 'tiger_epsilon':1,  'folder_name':'uttd'},
+    'both': {'case_name': 'both',        'deer_epsilon': 0.4,   'tiger_epsilon': 0.4,  'folder_name':'tttd'},
+    'none': {'case_name': 'none',        'deer_epsilon': 1,   'tiger_epsilon': 1,  'folder_name':'utud'},
 }
 
 SIM_CASES = TRAIN_CASES.copy()
-SIM_CASES[1]['tiger_epsilon']=0.01
-SIM_CASES[2]['deer_epsilon']=0.01
-SIM_CASES[3]['tiger_epsilon']=0.01
-SIM_CASES[3]['deer_epsilon']=0.01
+SIM_CASES['only_tiger']['tiger_epsilon']=0.01
+SIM_CASES['only_deer']['deer_epsilon']=0.01
+SIM_CASES['both']['tiger_epsilon']=0.01
+SIM_CASES['both']['deer_epsilon']=0.01
 
 # Constants
 
