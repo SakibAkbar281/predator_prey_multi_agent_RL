@@ -1,5 +1,11 @@
 import math
+import os
 import pygame
+
+def makedir(folder_path):
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
+
 def calculate_angle(sprite1, sprite2):
     # Get the center positions of the sprites
     x1, y1 = sprite1.rect.center

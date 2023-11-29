@@ -20,7 +20,7 @@ class Env:
         self.n_deers = 0
         self.steps = 0
         self.is_simulating = False
-
+        self.n_steps = 20
     def add(self, n_tigers, n_deers):
         self.tigers = self._create_agents(Tiger, n_tigers,
                                           all_sprites=self.all_sprites,
@@ -35,7 +35,8 @@ class Env:
 
         self.n_tigers = n_tigers
         self.n_deers = n_deers
-
+    def set_n_steps(self, n_steps):
+        self.n_steps = n_steps
     def transition(self):
         self.steps += 1
         state = self.get_state()
@@ -87,12 +88,20 @@ class Env:
                 else:
                     tiger.reward += NOT_COORDINATION_PENALTY
 
+            # Penalty for inefficiency
+
             # Capture reward
 
         for deer in self.deer_group:
-            deer.reward = PREY_REWARD_MOVE * \
-                          min([deer.get_distance(other=tiger)
-                               for tiger in self.tiger_group]) // 100
+
+            nearest_tigers_distance_sum = sum(sorted([deer.get_distance(tiger)
+                                                      for tiger in self.tiger_group])[:2]) \
+                                                if len(self.tiger_group) >=2 \
+                                                else 0
+
+            deer.reward = PREY_REWARD_MOVE * nearest_tigers_distance_sum // 200
+
+
             if deer.check_captured(self.tiger_group):
                 deer.reward += PREY_COST_CAPTURED
                 for tiger in self.tiger_group:
@@ -135,6 +144,19 @@ class Env:
             specific_group.add(agent)
             agents.append(agent)
         return agents
+    def set_deer_epsilon(self, deer_epsilon = 0.4):
+        for deer in self.deer_group:
+            deer.epsilon = deer_epsilon
+    def update_deer_epsilon(self, current_episode=1, num_episodes=1):
+        for deer in self.deer_group:
+            deer.epsilon = deer.epsilon * (1 - current_episode / (num_episodes + 1))
+
+    def set_tiger_epsilon(self, tiger_epsilon=0.4):
+        for tiger in self.tiger_group:
+            tiger.epsilon = tiger_epsilon
+    def update_tiger_epsilon(self, current_episode=1, num_episodes=1):
+        for tiger in self.tiger_group:
+            tiger.epsilon = tiger.epsilon * (1 - current_episode / (num_episodes + 1))
 
     def update_epsilon(self, deer_epsilon=0.4, tiger_epsilon=0.4, diminish_with_episode=False, current_episode=1,
                        num_episodes=1):
@@ -152,18 +174,21 @@ class Env:
             else:
                 tiger.epsilon = tiger_epsilon
 
-    def training(self, num_episodes, num_steps, deer_epsilon=0.4, tiger_epsilon=0.4):
+    def training(self, num_episodes, case='only tiger'):
         tiger_wins = 0
         deer_wins = 0
         tiger_wins_list = []
         episode_list = []
         for episode in range(num_episodes):
-            self.update_epsilon(deer_epsilon=deer_epsilon,
-                                tiger_epsilon=tiger_epsilon,
-                                diminish_with_episode=True,
-                                current_episode=episode,
-                                num_episodes=num_episodes)
-            for step in range(num_steps):
+            if case=='only tiger':
+                self.update_tiger_epsilon()
+            elif case =='only deer':
+                self.update_deer_epsilon()
+            elif case =='both':
+                self.update_deer_epsilon()
+                self.update_tiger_epsilon()
+
+            for step in range(self.n_steps):
                 self.transition()
                 if len(self.deer_group) == 0:
                     break
@@ -227,7 +252,7 @@ class Env:
         game_h = []
         self.is_simulating = True
         for game in range(num_games):
-            for step in range(N_STEPS):
+            for step in range(self.n_steps):
                 self.transition()
                 if len(self.deer_group) == 0:
                     break
@@ -269,7 +294,7 @@ class Env:
         return len(self.deer_group) == 0
 
     def game_over(self):
-        return len(self.deer_group) == 0 or self.steps >= N_STEPS
+        return len(self.deer_group) == 0 or self.steps >= self.n_steps
 
     def save(self, tiger_q_file='tiger_q.pkl', deer_q_file='deer_q.pkl'):
         with open(tiger_q_file, 'wb') as f:
