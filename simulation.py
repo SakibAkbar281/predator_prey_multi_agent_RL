@@ -41,5 +41,5 @@ env.set_tiger_epsilon(tiger_epsilon=tiger_epsilon)
 
 # Simulation
 env.load(tiger_q_file='tq.pkl', deer_q_file='dq.pkl', path=folder_train_path)
-tiger_wr, deer_wr = env.simulate(num_games=10, path=folder_path)
+tiger_wr, deer_wr = env.simulate(num_games=1000, path=folder_path)
 print(f'final winning ratio: {tiger_wr} : {deer_wr}')
