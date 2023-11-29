@@ -1,10 +1,17 @@
 import math
 import os
 import pygame
-
+import pickle
 def makedir(folder_path):
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
+def save_file(var, filename, path='./'):
+    with open(path+filename, 'wb') as f:
+        pickle.dump(var, f)
+def load_file(filename, path='./'):
+    with open(path+filename, 'rb') as f:
+        var = pickle.load(f)
+    return var
 
 def calculate_angle(sprite1, sprite2):
     # Get the center positions of the sprites

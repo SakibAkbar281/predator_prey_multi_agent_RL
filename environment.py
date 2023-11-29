@@ -21,6 +21,12 @@ class Env:
         self.steps = 0
         self.is_simulating = False
         self.n_steps = 20
+    #     self.train_path = './'
+    #     self.sim_path = './'
+    # def set_train_path(self,path):
+    #     self.train_path = path
+    # def set_sim_path(self,path):
+    #     self.sim_path = path
     def add(self, n_tigers, n_deers):
         self.tigers = self._create_agents(Tiger, n_tigers,
                                           all_sprites=self.all_sprites,
@@ -158,27 +164,10 @@ class Env:
         for tiger in self.tiger_group:
             tiger.epsilon = tiger.epsilon * (1 - current_episode / (num_episodes + 1))
 
-    def update_epsilon(self, deer_epsilon=0.4, tiger_epsilon=0.4, diminish_with_episode=False, current_episode=1,
-                       num_episodes=1):
-        for deer in self.deer_group:
-            if diminish_with_episode:
-                deer.epsilon = deer_epsilon * (
-                            1 - current_episode / (num_episodes + 1))  # 0.4*(1-i/(Neps+1));%0.5*(i)^(-1/3);
-            else:
-                deer.epsilon = deer_epsilon
-
-        for tiger in self.tiger_group:
-            if diminish_with_episode:
-                tiger.epsilon = tiger_epsilon * (
-                            1 - current_episode / (num_episodes + 1))  # 0.4*(1-i/(Neps+1));%0.5*(i)^(-1/3);
-            else:
-                tiger.epsilon = tiger_epsilon
-
-    def training(self, num_episodes, case='only tiger'):
+    def training(self, num_episodes, case='only tiger', path='./train/'):
         tiger_wins = 0
         deer_wins = 0
-        tiger_wins_list = []
-        episode_list = []
+        hist = dict(tiger_wins=[], deer_wins=[], num_games=[])
         for episode in range(num_episodes):
             if case=='only tiger':
                 self.update_tiger_epsilon()
@@ -196,6 +185,11 @@ class Env:
                 tiger_wins += 1
             else:
                 deer_wins += 1
+
+            hist["tiger_wins"].append(tiger_wins)
+            hist["deer_wins"].append(deer_wins)
+            hist["num_games"].append(episode)
+
             if (episode + 1) % 10 == 0:
                 print(
                     f'Episode {episode + 1}  tiger : deer = {100 * tiger_wins / (episode + 1)}% : {100 * deer_wins / (episode + 1)} %.'
@@ -203,6 +197,7 @@ class Env:
                     f'\nDeer visited {(len(self.deer_Qs) - 1) / 4} states')
             if episode % 1000 == 0:
                 self.save()
+                save_file(hist,'hist.pkl', path=path)
             self.reset()
 
     def run_game(self, screen, fps=10):
@@ -244,12 +239,11 @@ class Env:
             pygame.display.update()
             clock.tick(fps)
 
-    def simulate(self, num_games):
+    def simulate(self, num_games, path='./sim/'):
         tiger_wins = 0
         deer_wins = 0
-        tiger_wh = []
-        deer_wh = []
-        game_h = []
+        hist = dict(tiger_wins = [], deer_wins = [], num_games = [])
+
         self.is_simulating = True
         for game in range(num_games):
             for step in range(self.n_steps):
@@ -262,30 +256,20 @@ class Env:
                 deer_wins += 1
             tiger_wr = 100 * tiger_wins / (game + 1)
             deer_wr = 100 * deer_wins / (game + 1)
-            tiger_wh.append(tiger_wr)
-            deer_wh.append(deer_wr)
-            game_h.append(game + 1)
+            hist["tiger_wins"].append(tiger_wins)
+            hist["deer_wins"].append(deer_wins)
+            hist["num_games"].append(game)
             if (game + 1) % 10 == 0:
-                print(
-                    f'Game {game + 1}  tiger : deer '
-                    f'= {tiger_wr}% : {deer_wr} %.')
-            if game % 100 == 0:
-                self.plot_winning_ratio(game_h,tiger_wh,deer_wh)
+                print(f'Game {game + 1}  tiger : deer = {tiger_wr}% : {deer_wr} %.')
+                save_file(hist, filename='hist.pkl',path=path)
             self.reset()
         self.is_simulating = False
-
         winning_ratio = 100 * tiger_wins / num_games, 100 * deer_wins / num_games
+        save_file(hist, filename='hist.pkl', path=path)
         return winning_ratio
 
     def training_step(self):
         pass
-
-    def plot_winning_ratio(self, game_history, tiger_winning_history, deer_winning_history):
-        fig, ax = plt.subplots(1,1, figsize=(4,4))
-        ax.plot(game_history, tiger_winning_history)
-        ax.plot(game_history, deer_winning_history)
-        fig.show()
-
 
     def plot_states_visited(self):
         pass
@@ -301,7 +285,6 @@ class Env:
             pickle.dump(self.tiger_Qs, f)
         with open(path+deer_q_file, 'wb') as f:
             pickle.dump(self.deer_Qs, f)
-
 
     def load(self, tiger_q_file='tq.pkl', deer_q_file='dq.pkl',path='./'):
         with open(path+tiger_q_file, 'rb') as f:
