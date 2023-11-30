@@ -6,7 +6,7 @@ pygame.init()
 
 
 # Specify the game_case number
-game_case = '2tiger2deer30steps'
+game_case = '2tiger1deer30steps'
 sim_case = 'none'
 
 # Extract parameters based on the chosen game_case
@@ -19,9 +19,8 @@ deer_epsilon = SIM_CASES[sim_case]['deer_epsilon']
 tiger_epsilon = SIM_CASES[sim_case]['tiger_epsilon']
 case_name = SIM_CASES[sim_case]['case_name']
 
-folder_path = './' + GAME_CASES[game_case]["folder_name"] + '/' + SIM_CASES[sim_case]["folder_name"] + '/sim/'
-folder_train_path = './' + GAME_CASES[game_case]["folder_name"] + '/' + SIM_CASES[sim_case]["folder_name"] + '/train/'
-
+folder_path = get_sim_path(game_case,sim_case)
+folder_train_path = get_train_path(game_case,sim_case)
 
 makedir(folder_path=folder_path)
 makedir(folder_path=folder_train_path)

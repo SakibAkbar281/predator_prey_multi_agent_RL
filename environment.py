@@ -167,7 +167,8 @@ class Env:
     def training(self, num_episodes, case='only tiger', path='./train/'):
         tiger_wins = 0
         deer_wins = 0
-        hist = dict(tiger_wins=[], deer_wins=[], num_games=[])
+        hist = dict(tiger_wins=[], deer_wins=[], num_games=[],
+                    states_visited_tiger=[], states_visited_deer=[],q_sum=[])
         for episode in range(num_episodes):
             if case=='only tiger':
                 self.update_tiger_epsilon()
@@ -186,19 +187,27 @@ class Env:
             else:
                 deer_wins += 1
 
+            states_visited_tiger = (len(self.tiger_Qs) - 1) / 4
+            states_visited_deer = (len(self.deer_Qs) - 1) / 4
+            q_sum = sum(self.tiger_Qs.values()) + sum(self.deer_Qs.values())
+
             hist["tiger_wins"].append(tiger_wins)
             hist["deer_wins"].append(deer_wins)
             hist["num_games"].append(episode+1)
+            hist["states_visited_tiger"].append(states_visited_tiger)
+            hist["states_visited_deer"].append(states_visited_deer)
+            hist["q_sum"].append(q_sum)
 
             if (episode + 1) % 10 == 0:
                 print(
                     f'Episode {episode + 1}  tiger : deer = {100 * tiger_wins / (episode + 1)}% : {100 * deer_wins / (episode + 1)} %.'
-                    f'\nTiger visited {(len(self.tiger_Qs) - 1) / 4} states,'
-                    f'\nDeer visited {(len(self.deer_Qs) - 1) / 4} states')
+                    f'\nTiger visited {states_visited_tiger} states,'
+                    f'\nDeer visited {states_visited_deer} states')
             if episode % 1000 == 0:
                 self.save()
                 save_file(hist,'hist.pkl', path=path)
             self.reset()
+        save_file(hist, 'hist.pkl', path=path)
 
     def run_game(self, screen, fps=10):
         # Time
