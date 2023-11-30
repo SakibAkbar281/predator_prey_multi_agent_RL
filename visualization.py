@@ -18,13 +18,18 @@ for ax, game_case in zip(axs, GAME_CASES.keys()):
 
     tiger_win_percentage, num_games, final_tiger_win_percentage = calculate_winning_ratio(hist)
 
+    std = np.std(tiger_win_percentage, axis=0)
+
     ax.set_title(GAME_CASES[game_case]['title'])
     ax.plot(num_games, tiger_win_percentage,
             label='Tiger Winning Percentage')
+    ax.fill_between(num_games, tiger_win_percentage - std,
+                    tiger_win_percentage + std, color='red',
+                    alpha=0.2)
     ax.plot(num_games, final_tiger_win_percentage * np.ones_like(num_games),
             label='Converged Tiger Winning Percentage')
-    ax.text(0.5, 0.5, f'Tiger: Deer = {final_tiger_win_percentage:0.2f} :'
-                      f' {100 - final_tiger_win_percentage:0.2f}',
+    ax.text(0.5, 0.8, rf'Tiger: Deer \\ = {final_tiger_win_percentage:0.2f} $\pm$ {std:0.2f} :'
+                      rf' {100 - final_tiger_win_percentage:0.2f} $\pm$ {std:0.2f}',
             ha='center', va='center', transform=ax.transAxes)
     ax.set_ylim(0, 100)
 axs[2].set_xlabel('Number of Games')
@@ -48,6 +53,11 @@ for ax, game_case in zip(axs, GAME_CASES.keys()):
     twp_only_tiger, neps_only_tiger, ftwp_only_tiger = calculate_winning_ratio(hist_only_tiger)
     twp_only_deer, neps_only_deer, ftwp_only_deer = calculate_winning_ratio(hist_only_deer)
     twp_both, neps_both, ftwp_both = calculate_winning_ratio(hist_both)
+
+    std_only_tiger = np.std(twp_only_tiger, axis=0)
+    std_only_deer = np.std(twp_only_deer, axis=0)
+    std_both = np.std(twp_both, axis=0)
+
     ax.set_title(GAME_CASES[game_case]['title'])
 
     ax.plot(neps_only_tiger, baseline_ftwp * np.ones_like(neps_only_tiger), color='black', linestyle='dashed',
@@ -62,6 +72,12 @@ for ax, game_case in zip(axs, GAME_CASES.keys()):
             label='Untrained Tiger Vs trained Deer')
     ax.plot(neps_both, twp_both, color='darkgreen', linestyle='solid',
             label='Trained Tiger Vs Trained Deer')
+
+    ax.fill_between(neps_only_tiger, twp_only_tiger - std_only_tiger, twp_only_tiger + std_only_tiger, color='navy',
+                    alpha=0.2)
+    ax.fill_between(neps_only_deer, twp_only_deer - std_only_deer, twp_only_deer + std_only_deer, color='darkred',
+                    alpha=0.2)
+    ax.fill_between(neps_both, twp_both - std_both, twp_both + std_both, color='darkgreen', alpha=0.2)
 
     ax.set_ylim(0, 100)
 axs[2].set_xlabel('Number of Episodes')
@@ -108,6 +124,30 @@ for ax, game_case in zip(axs, GAME_CASES.keys()):
             linestyle='dashed',
             label='Total States')
 
+    # ax.stackplot(neps_only_tiger,
+    #              states_visited_tiger_ot,
+    #              states_visited_deer_ot,
+    #              labels=['States (tiger) [Trained only tiger]',
+    #                      'States (deer) [Trained only tiger]'],
+    #              colors=['navy', 'skyblue'],
+    #              alpha=0.2)
+    # #
+    # ax.stackplot(neps_only_deer,
+    #              states_visited_tiger_od,
+    #              states_visited_deer_od,
+    #              labels=['States (tiger) [Trained only deer]',
+    #                      'States (deer) [Trained only deer]'],
+    #              colors=['darkgreen', 'lightgreen'],
+    #              alpha=0.2)
+    #
+    # ax.stackplot(neps_both,
+    #              states_visited_tiger_b,
+    #              states_visited_deer_b,
+    #              labels=['States (tiger) [Trained both]',
+    #                      'States (deer) [Trained both]'],
+    #              colors=['darkred', 'salmon'],
+    #              alpha=0.2)
+    #
     ax.plot(neps_only_tiger,
             states_visited_tiger_ot,
             color='navy',

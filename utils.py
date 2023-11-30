@@ -47,6 +47,26 @@ def get_q_history(hist):
     neps = np.array(hist["num_games"])
     return q_sum, states_visited_tiger, states_visited_deer, neps
 
+def get_moving_avg_and_std_error(hist):
+    cumulative_wins = np.array(hist['tiger_wins'])
+    incremental_wins = np.diff(cumulative_wins, prepend=0)
+
+    # Define the window size for the moving average (e.g., last 100 games)
+    window_size = 100
+
+    # Calculate the moving average of the winning probability for the last `window_size` games
+    # Ensure the window does not go out of bounds
+    start_index = max(0, len(incremental_wins) - window_size)
+    end_index = len(incremental_wins)
+    windowed_wins = incremental_wins[start_index:end_index]
+    moving_avg_win_prob = np.mean(windowed_wins)
+
+    # Calculate standard error for the moving average
+    # Use the standard deviation of the windowed wins and divide by the square root of the window size
+    standard_error = np.std(windowed_wins) / np.sqrt(window_size)
+    return moving_avg_win_prob, standard_error
+
+
 def calculate_angle(sprite1, sprite2):
     # Get the center positions of the sprites
     x1, y1 = sprite1.rect.center
