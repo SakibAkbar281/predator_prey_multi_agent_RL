@@ -33,7 +33,7 @@ for game_case in GAME_CASES.keys():
         env.add(n_tigers, n_deers)
 
         # Training
-        num_episodes = 100
+        num_episodes = 10000
         env.set_n_steps(n_steps)
 
         env.set_deer_epsilon(deer_epsilon=deer_epsilon)

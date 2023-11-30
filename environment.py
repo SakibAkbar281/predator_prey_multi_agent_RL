@@ -94,9 +94,9 @@ class Env:
                 else:
                     tiger.reward += NOT_COORDINATION_PENALTY
 
-            # Penalty for inefficiency
+            # Penalty for inefficiency todo
 
-            # Capture reward
+            # Capture reward todo
 
         for deer in self.deer_group:
 
@@ -107,6 +107,10 @@ class Env:
 
             deer.reward = PREY_REWARD_MOVE * nearest_tigers_distance_sum // 200
 
+            if deer.is_close_to_be_captured(tiger_group=self.tiger_group):
+                deer.reward += PREY_COST_NEARLY_CAPTURED
+
+            # todo: utilize position memory of deer to evade the tiger
 
             if deer.check_captured(self.tiger_group):
                 deer.reward += PREY_COST_CAPTURED

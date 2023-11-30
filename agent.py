@@ -129,8 +129,15 @@ class Deer(Agent):
         for tiger in tiger_group:
             if self.is_close(tiger):
                 n_close_tigers += 1
-        # if n_close_tigers >= 2:
-        #     self.got_caught = True
+
+        return n_close_tigers >= 2
+
+    def is_close_to_be_captured(self, tiger_group):
+        n_close_tigers = 0
+        for tiger in tiger_group:
+            if self.get_distance(tiger) <= 250:
+                n_close_tigers += 1
+
         return n_close_tigers >= 2
 
 
