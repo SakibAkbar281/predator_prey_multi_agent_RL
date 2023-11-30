@@ -20,7 +20,13 @@ class Env:
         self.n_deers = 0
         self.steps = 0
         self.is_simulating = False
-
+        self.n_steps = 20
+    #     self.train_path = './'
+    #     self.sim_path = './'
+    # def set_train_path(self,path):
+    #     self.train_path = path
+    # def set_sim_path(self,path):
+    #     self.sim_path = path
     def add(self, n_tigers, n_deers):
         self.tigers = self._create_agents(Tiger, n_tigers,
                                           all_sprites=self.all_sprites,
@@ -35,7 +41,8 @@ class Env:
 
         self.n_tigers = n_tigers
         self.n_deers = n_deers
-
+    def set_n_steps(self, n_steps):
+        self.n_steps = n_steps
     def transition(self):
         self.steps += 1
         state = self.get_state()
@@ -80,24 +87,27 @@ class Env:
             closest_deer_distance = min([tiger.get_distance(deer) for deer in self.deer_group], default=0)
             tiger.reward = PREDATOR_COST_PER_MOVE * closest_deer_distance // 100
             # Coordination and teamwork bonuses
-
-            if self.tiger_group.is_well_spaced():  # Define this method to check optimal spacing
+            if self.tiger_group.is_well_spaced():
                 tiger.reward += TEAMWORK_BONUS
-                if self.tiger_group.is_coordinated(
-                        self.deer_group):  # Define this method to check for strategic positioning
+                if self.tiger_group.is_coordinated(self.deer_group):  #
                     tiger.reward += COORDINATION_BONUS
-                    # print('Tiger group is coordinated')
                 else:
                     tiger.reward += NOT_COORDINATION_PENALTY
-                    # print('Tiger group is not coordinated')
-                # print('Tiger group is well spaced')
+
+            # Penalty for inefficiency
 
             # Capture reward
 
         for deer in self.deer_group:
-            deer.reward = PREY_REWARD_MOVE * \
-                          sum([deer.get_distance(other=tiger)
-                               for tiger in self.tiger_group]) // 100
+
+            nearest_tigers_distance_sum = sum(sorted([deer.get_distance(tiger)
+                                                      for tiger in self.tiger_group])[:2]) \
+                                                if len(self.tiger_group) >=2 \
+                                                else 0
+
+            deer.reward = PREY_REWARD_MOVE * nearest_tigers_distance_sum // 200
+
+
             if deer.check_captured(self.tiger_group):
                 deer.reward += PREY_COST_CAPTURED
                 for tiger in self.tiger_group:
@@ -140,33 +150,34 @@ class Env:
             specific_group.add(agent)
             agents.append(agent)
         return agents
-
-    def update_epsilon(self, deer_epsilon=0.4, tiger_epsilon=0.4, diminish_with_episode=False, current_episode=1,
-                       num_episodes=1):
+    def set_deer_epsilon(self, deer_epsilon = 0.4):
         for deer in self.deer_group:
-            if diminish_with_episode:
-                deer.epsilon = deer_epsilon * (
-                            1 - current_episode / (num_episodes + 1))  # 0.4*(1-i/(Neps+1));%0.5*(i)^(-1/3);
-            else:
-                deer.epsilon = deer_epsilon
+            deer.epsilon = deer_epsilon
+    def update_deer_epsilon(self, current_episode=1, num_episodes=1):
+        for deer in self.deer_group:
+            deer.epsilon = deer.epsilon * (1 - current_episode / (num_episodes + 1))
 
+    def set_tiger_epsilon(self, tiger_epsilon=0.4):
         for tiger in self.tiger_group:
-            if diminish_with_episode:
-                tiger.epsilon = tiger_epsilon * (
-                            1 - current_episode / (num_episodes + 1))  # 0.4*(1-i/(Neps+1));%0.5*(i)^(-1/3);
-            else:
-                tiger.epsilon = tiger_epsilon
+            tiger.epsilon = tiger_epsilon
+    def update_tiger_epsilon(self, current_episode=1, num_episodes=1):
+        for tiger in self.tiger_group:
+            tiger.epsilon = tiger.epsilon * (1 - current_episode / (num_episodes + 1))
 
-    def training(self, num_episodes, num_steps, deer_epsilon=0.4, tiger_epsilon=0.4):
+    def training(self, num_episodes, case='only tiger', path='./train/'):
         tiger_wins = 0
         deer_wins = 0
+        hist = dict(tiger_wins=[], deer_wins=[], num_games=[])
         for episode in range(num_episodes):
-            self.update_epsilon(deer_epsilon=deer_epsilon,
-                                tiger_epsilon=tiger_epsilon,
-                                diminish_with_episode=True,
-                                current_episode=episode,
-                                num_episodes=num_episodes)
-            for step in range(num_steps):
+            if case=='only tiger':
+                self.update_tiger_epsilon()
+            elif case =='only deer':
+                self.update_deer_epsilon()
+            elif case =='both':
+                self.update_deer_epsilon()
+                self.update_tiger_epsilon()
+
+            for step in range(self.n_steps):
                 self.transition()
                 if len(self.deer_group) == 0:
                     break
@@ -174,6 +185,11 @@ class Env:
                 tiger_wins += 1
             else:
                 deer_wins += 1
+
+            hist["tiger_wins"].append(tiger_wins)
+            hist["deer_wins"].append(deer_wins)
+            hist["num_games"].append(episode+1)
+
             if (episode + 1) % 10 == 0:
                 print(
                     f'Episode {episode + 1}  tiger : deer = {100 * tiger_wins / (episode + 1)}% : {100 * deer_wins / (episode + 1)} %.'
@@ -181,6 +197,7 @@ class Env:
                     f'\nDeer visited {(len(self.deer_Qs) - 1) / 4} states')
             if episode % 1000 == 0:
                 self.save()
+                save_file(hist,'hist.pkl', path=path)
             self.reset()
 
     def run_game(self, screen, fps=10):
@@ -222,15 +239,14 @@ class Env:
             pygame.display.update()
             clock.tick(fps)
 
-    def simulate(self, num_games):
+    def simulate(self, num_games, path='./sim/'):
         tiger_wins = 0
         deer_wins = 0
-        tiger_wh = []
-        deer_wh = []
-        game_h = []
+        hist = dict(tiger_wins = [], deer_wins = [], num_games = [])
+
         self.is_simulating = True
         for game in range(num_games):
-            for step in range(N_STEPS):
+            for step in range(self.n_steps):
                 self.transition()
                 if len(self.deer_group) == 0:
                     break
@@ -240,33 +256,20 @@ class Env:
                 deer_wins += 1
             tiger_wr = 100 * tiger_wins / (game + 1)
             deer_wr = 100 * deer_wins / (game + 1)
-            tiger_wh.append(tiger_wr)
-            deer_wh.append(deer_wr)
-            game_h.append(game + 1)
+            hist["tiger_wins"].append(tiger_wins)
+            hist["deer_wins"].append(deer_wins)
+            hist["num_games"].append(game+1)
             if (game + 1) % 10 == 0:
-                print(
-                    f'Game {game + 1}  tiger : deer '
-                    f'= {tiger_wr}% : {deer_wr} %.')
-            if game % 100 == 0:
-                self.plot_winning_ratio(game_h,tiger_wh,deer_wh)
+                print(f'Game {game + 1}  tiger : deer = {tiger_wr}% : {deer_wr} %.')
+                save_file(hist, filename='hist.pkl',path=path)
             self.reset()
         self.is_simulating = False
-
         winning_ratio = 100 * tiger_wins / num_games, 100 * deer_wins / num_games
+        save_file(hist, filename='hist.pkl', path=path)
         return winning_ratio
 
     def training_step(self):
         pass
-
-    def plot_winning_ratio(self, game_history, tiger_winning_history, deer_winning_history):
-        fig, ax = plt.subplots(1,1, figsize=(4,4))
-        ax.plot(game_history, tiger_winning_history, label='Tiger Winning Ratio')
-        ax.plot(game_history, deer_winning_history, label='Deer Winning Ratio')
-        ax.legend()
-        ax.set_xlabel('Number of Games')
-        ax.set_ylabel('Winning Ratio')
-        fig.show()
-
 
     def plot_states_visited(self):
         pass
@@ -275,18 +278,18 @@ class Env:
         return len(self.deer_group) == 0
 
     def game_over(self):
-        return len(self.deer_group) == 0 or self.steps >= N_STEPS
+        return len(self.deer_group) == 0 or self.steps >= self.n_steps
 
-    def save(self, tiger_q_file='tiger_q.pkl', deer_q_file='deer_q.pkl'):
-        with open(tiger_q_file, 'wb') as f:
+    def save(self, tiger_q_file='tq.pkl', deer_q_file='dq.pkl', path='./'):
+        with open(path+tiger_q_file, 'wb') as f:
             pickle.dump(self.tiger_Qs, f)
-        with open(deer_q_file, 'wb') as f:
+        with open(path+deer_q_file, 'wb') as f:
             pickle.dump(self.deer_Qs, f)
 
-    def load(self, tiger_q_file, deer_q_file):
-        with open(tiger_q_file, 'rb') as f:
+    def load(self, tiger_q_file='tq.pkl', deer_q_file='dq.pkl',path='./'):
+        with open(path+tiger_q_file, 'rb') as f:
             self.tiger_Qs = pickle.load(f)
-        with open(deer_q_file, 'rb') as f:
+        with open(path+deer_q_file, 'rb') as f:
             self.deer_Qs = pickle.load(f)
         print(f'Loaded successfully. '
               f'\nTiger visited {(len(self.tiger_Qs) - 1) / 4} states'

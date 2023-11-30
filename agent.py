@@ -1,7 +1,5 @@
 import random
-import pygame
 from pygame.math import Vector2
-import math
 from config import *
 from utils import *
 
