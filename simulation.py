@@ -6,7 +6,7 @@ pygame.init()
 
 
 # Specify the game_case number
-game_case = '2tiger1deer30steps'
+game_case = '2tiger2deer30steps'
 sim_case = 'none'
 
 # Extract parameters based on the chosen game_case
@@ -38,10 +38,11 @@ ground = Background('ground.jpg', width=WIDTH, height=HEIGHT)
 # Creating agents
 env = Env(ground=ground)
 env.add(n_tigers, n_deers)
+env.set_n_steps(n_steps)
 env.set_deer_epsilon(deer_epsilon=deer_epsilon)
 env.set_tiger_epsilon(tiger_epsilon=tiger_epsilon)
 
 # Simulation
-env.load(tiger_q_file='tq.pkl', deer_q_file='dq.pkl', path=folder_train_path)
+# env.load(tiger_q_file='tq.pkl', deer_q_file='dq.pkl', path=folder_train_path)
 tiger_wr, deer_wr = env.simulate(num_games=5000, path=folder_path)
 print(f'final winning ratio: {tiger_wr} : {deer_wr}')

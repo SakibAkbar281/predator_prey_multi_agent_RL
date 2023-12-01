@@ -4,6 +4,8 @@ import pygame
 import pickle
 from config import *
 import numpy as np
+import re
+from cases import *
 def makedir(folder_path):
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
@@ -31,6 +33,43 @@ def get_sim_path(game_case, sim_case):
 def get_train_path(game_case, train_case):
     folder_train_path = './' + GAME_CASES[game_case]["folder_name"] + '/' + TRAIN_CASES[train_case]["folder_name"] + '/train/'
     return folder_train_path
+
+def get_train_path_2(n_tigers, n_deers, n_steps, train_case):
+    folder_train_path = f"./{n_tigers}t{n_deers}d{n_steps}/{TRAIN_CASES[train_case]['folder_name']}/train/"
+    return folder_train_path
+
+
+
+def list_folders_in_directory(directory_path):
+    # List all the folders in the specified directory
+    return [item for item in os.listdir(directory_path)
+            if os.path.isdir(os.path.join(directory_path, item))]
+
+
+def extract_numbers(s):
+    return tuple(map(int, re.findall(r'\d+', s)))
+
+def get_all_trained_cases(data_path='./data/'):
+    game_case_folders = list_folders_in_directory(data_path)
+    train_cases = []
+    base_cases = []
+    for game_case_folder in game_case_folders:
+        n_tigers, n_deers, n_steps = extract_numbers(game_case_folder)
+        game_case_path = os.path.join(data_path, game_case_folder)
+        train_case_folders = list_folders_in_directory(game_case_path)
+        for train_case_folder in train_case_folders:
+            train_tiger, train_deer = extract_numbers(train_case_folder)
+            train_tiger = bool(train_tiger)
+            train_deer = bool(train_deer)
+            train_case_path = os.path.join(game_case_path, train_case_folder)
+            if train_tiger or train_deer:
+                case = Case(n_tigers, n_deers, n_steps, train_tiger, train_deer)
+                train_cases.append(case)
+            else:
+                case = Case(n_tigers, n_deers, n_steps, train_tiger, train_deer)
+                base_cases.append(case)
+    return train_cases, base_cases
+
 
 def calculate_winning_ratio(hist):
     tiger_wins = np.array(hist['tiger_wins'])

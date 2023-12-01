@@ -1,3 +1,4 @@
+import copy
 WIDTH, HEIGHT = 500, 500
 
 # Cases
@@ -32,22 +33,30 @@ TRAIN_CASES = {
     'only_tiger': {'case_name': 'only tiger',
                    'deer_epsilon': 1,
                    'tiger_epsilon': 0.4,
-                   'folder_name': 'ttud'},
+                   'folder_name': 'ttud',
+                   'train_tiger': True,
+                   'train_deer': False},
     'only_deer': {'case_name': 'only deer',
                   'deer_epsilon': 0.4,
                   'tiger_epsilon': 1,
-                  'folder_name': 'uttd'},
+                  'folder_name': 'uttd',
+                  'train_tiger': False,
+                  'train_deer': True},
     'both': {'case_name': 'both',
              'deer_epsilon': 0.4,
              'tiger_epsilon': 0.4,
-             'folder_name': 'tttd'},
+             'folder_name': 'tttd',
+             'train_tiger': True,
+             'train_deer': True},
     'none': {'case_name': 'none',
              'deer_epsilon': 1,
              'tiger_epsilon': 1,
-             'folder_name': 'utud'},
+             'folder_name': 'utud',
+             'train_tiger': False,
+             'train_deer': False}
 }
 
-SIM_CASES = TRAIN_CASES.copy()
+SIM_CASES = copy.deepcopy(TRAIN_CASES)
 SIM_CASES['only_tiger']['tiger_epsilon'] = 0.01
 SIM_CASES['only_deer']['deer_epsilon'] = 0.01
 SIM_CASES['both']['tiger_epsilon'] = 0.01
@@ -60,11 +69,19 @@ PREDATOR_COST_PER_MOVE = -1
 COORDINATION_BONUS = 10
 NOT_COORDINATION_PENALTY = -20
 TEAMWORK_BONUS = 10
-PREY_REWARD_SURVIVAL = 10
+PREY_REWARD_SURVIVAL = 20
+PREY_EVASION_REWARD = 10
+PREY_INDIFFERENCE_COST = -20
 PREY_REWARD_MOVE = 1
-PREY_COST_CAPTURED = -11
-PREY_COST_NEARLY_CAPTURED = -5
+PREY_COST_CAPTURED = -10
+PREY_COST_NEARLY_CAPTURED = -10
 PREDATOR_REWARD_CAPTURE = 11
 CAPTURE_RADIUS = 150
 MINIMUM_PREDATOR_DISTANCE = 100
 MAXIMUM_PREDATOR_DISTANCE = 200
+
+# Learning Rates
+ALPHA_DEER = 0.5
+ALPHA_TIGER = 0.7
+# Discount Factor
+GAMMA = 0.618

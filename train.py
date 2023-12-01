@@ -7,8 +7,8 @@ pygame.init()
 # game_case = '2tiger1deer50steps'
 # train_case = 'both'
 
-for game_case in GAME_CASES.keys():
-    for train_case in TRAIN_CASES.keys():
+for game_case in ['2tiger1deer50steps']:
+    for train_case in ['only_deer']:
         # Extract parameters based on the chosen game_case
         n_tigers = GAME_CASES[game_case]["n_tigers"]
         n_deers = GAME_CASES[game_case]["n_deers"]
@@ -33,10 +33,11 @@ for game_case in GAME_CASES.keys():
         env.add(n_tigers, n_deers)
 
         # Training
-        num_episodes = 10000
+        num_episodes = 5000
         env.set_n_steps(n_steps)
-
+        env.tiger_not_learning = not TRAIN_CASES[train_case]['train_tiger']
+        env.deer_not_learning = not TRAIN_CASES[train_case]['train_deer']
         env.set_deer_epsilon(deer_epsilon=deer_epsilon)
         env.set_tiger_epsilon(tiger_epsilon=tiger_epsilon)
-        env.training(num_episodes, case=case_name, path=folder_path)
+        env.training(num_episodes, train_condition=case_name, path=folder_path)
         env.save(tiger_q_file='tq.pkl', deer_q_file='dq.pkl', path=folder_path)

@@ -60,24 +60,18 @@ for ax, game_case in zip(axs, GAME_CASES.keys()):
 
     ax.set_title(GAME_CASES[game_case]['title'])
 
-    ax.plot(neps_only_tiger, baseline_ftwp * np.ones_like(neps_only_tiger), color='black', linestyle='dashed',
+    ax.plot(neps_only_tiger, baseline_ftwp * np.ones_like(neps_only_tiger), color='black', linewidth=2, linestyle='dashed',
             label='Baseline')
-    ax.plot(neps_only_tiger, ftwp_only_tiger * np.ones_like(neps_only_tiger), color='navy', linestyle='dashed')
-    ax.plot(neps_only_deer, ftwp_only_deer * np.ones_like(neps_only_deer), color='darkred', linestyle='dashed')
-    ax.plot(neps_both, ftwp_both * np.ones_like(neps_both), color='darkgreen', linestyle='dashed')
+    # ax.plot(neps_only_tiger, ftwp_only_tiger * np.ones_like(neps_only_tiger), color='navy', linestyle='dashed')
+    # ax.plot(neps_only_deer, ftwp_only_deer * np.ones_like(neps_only_deer), color='darkred', linestyle='dashed')
+    # ax.plot(neps_both, ftwp_both * np.ones_like(neps_both), color='orange', linestyle='dashed')
 
     ax.plot(neps_only_tiger, twp_only_tiger, color='navy', linestyle='solid',
             label='Trained Tiger Vs Untrained Deer')
     ax.plot(neps_only_deer, twp_only_deer, color='darkred', linestyle='solid',
             label='Untrained Tiger Vs trained Deer')
-    ax.plot(neps_both, twp_both, color='darkgreen', linestyle='solid',
+    ax.plot(neps_both, twp_both, color='orange', linestyle='solid',
             label='Trained Tiger Vs Trained Deer')
-
-    ax.fill_between(neps_only_tiger, twp_only_tiger - std_only_tiger, twp_only_tiger + std_only_tiger, color='navy',
-                    alpha=0.2)
-    ax.fill_between(neps_only_deer, twp_only_deer - std_only_deer, twp_only_deer + std_only_deer, color='darkred',
-                    alpha=0.2)
-    ax.fill_between(neps_both, twp_both - std_both, twp_both + std_both, color='darkgreen', alpha=0.2)
 
     ax.set_ylim(0, 100)
 axs[2].set_xlabel('Number of Episodes')
@@ -137,7 +131,7 @@ for ax, game_case in zip(axs, GAME_CASES.keys()):
     #              states_visited_deer_od,
     #              labels=['States (tiger) [Trained only deer]',
     #                      'States (deer) [Trained only deer]'],
-    #              colors=['darkgreen', 'lightgreen'],
+    #              colors=['orange', 'lightgreen'],
     #              alpha=0.2)
     #
     # ax.stackplot(neps_both,
@@ -161,12 +155,12 @@ for ax, game_case in zip(axs, GAME_CASES.keys()):
 
     ax.plot(neps_only_deer,
             states_visited_tiger_od,
-            color='darkgreen',
+            color='orange',
             linestyle='dotted',
             label='States (tiger) [Trained only deer]')
     ax.plot(neps_only_deer,
             states_visited_deer_od,
-            color='darkgreen',
+            color='orange',
             linestyle='-.',
             label='States (deer) [Trained only deer]')
 
@@ -227,7 +221,7 @@ for ax, game_case in zip(axs, GAME_CASES.keys()):
 
     ax.plot(neps_only_deer,
             q_sum_od,
-            color='darkgreen',
+            color='orange',
             linestyle='solid',
             label='Trained only deer')
 

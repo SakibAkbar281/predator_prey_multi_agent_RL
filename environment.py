@@ -21,6 +21,9 @@ class Env:
         self.steps = 0
         self.is_simulating = False
         self.n_steps = 20
+        self.tiger_not_learning = False
+        self.deer_not_learning = False
+
     #     self.train_path = './'
     #     self.sim_path = './'
     # def set_train_path(self,path):
@@ -41,8 +44,10 @@ class Env:
 
         self.n_tigers = n_tigers
         self.n_deers = n_deers
+
     def set_n_steps(self, n_steps):
         self.n_steps = n_steps
+
     def transition(self):
         self.steps += 1
         state = self.get_state()
@@ -51,22 +56,22 @@ class Env:
             if deer.got_caught:
                 deer.kill()
         for tiger_index, tiger in enumerate(self.tiger_group):
-            if not self.is_simulating:
+            if not self.is_simulating and not self.tiger_not_learning:
                 tiger_move = tiger.choose(state, tiger.reward)
             else:
                 tiger_move = tiger.choose_without_learning(state)
             tiger.update(tiger_move, self.all_sprites)
-            if not self.is_simulating:
+            if not self.is_simulating and not self.tiger_not_learning:
                 self.tiger_Qs.update(tiger.Q)
 
             # print(f'Tiger {tiger_index+1} moved to {tiger.pos}')
         for deer_index, deer in enumerate(self.deer_group):
-            if not self.is_simulating:
+            if not self.is_simulating and not self.deer_not_learning:
                 deer_move = deer.choose(state, deer.reward)
             else:
                 deer_move = deer.choose_without_learning(state)
             deer.update(deer_move, self.all_sprites)
-            if not self.is_simulating:
+            if not self.is_simulating and not self.deer_not_learning:
                 self.deer_Qs.update(deer.Q)
             if deer.check_captured(self.tiger_group):  # and not self.is_training:
                 deer.got_caught = True
@@ -84,7 +89,8 @@ class Env:
         deer_rewards = []
         for tiger in self.tiger_group:
             # Movement cost based on distance
-            closest_deer_distance = min([tiger.get_distance(deer) for deer in self.deer_group], default=0)
+            closest_deer_distance = min([tiger.get_distance(deer)
+                                         for deer in self.deer_group], default=0)
             tiger.reward = PREDATOR_COST_PER_MOVE * closest_deer_distance // 100
             # Coordination and teamwork bonuses
             if self.tiger_group.is_well_spaced():
@@ -94,29 +100,27 @@ class Env:
                 else:
                     tiger.reward += NOT_COORDINATION_PENALTY
 
-            # Penalty for inefficiency todo
-
-            # Capture reward todo
-
         for deer in self.deer_group:
+            closest_tiger_distance = min([deer.get_distance(tiger)
+                                          for tiger in self.tiger_group])
 
-            nearest_tigers_distance_sum = sum(sorted([deer.get_distance(tiger)
-                                                      for tiger in self.tiger_group])[:2]) \
-                                                if len(self.tiger_group) >=2 \
-                                                else 0
-
-            deer.reward = PREY_REWARD_MOVE * nearest_tigers_distance_sum // 200
-
-            if deer.is_close_to_be_captured(tiger_group=self.tiger_group):
-                deer.reward += PREY_COST_NEARLY_CAPTURED
-
-            # todo: utilize position memory of deer to evade the tiger
+            if deer.prev_closest_tiger_distance != -1:
+                if deer.prev_closest_tiger_distance < closest_tiger_distance:
+                    deer.reward += PREY_EVASION_REWARD * (
+                                closest_tiger_distance - deer.prev_closest_tiger_distance) // 100
+                else:
+                    deer.reward += PREY_INDIFFERENCE_COST * -(
+                                closest_tiger_distance - deer.prev_closest_tiger_distance) // 100
+            deer.prev_closest_tiger_distance = closest_tiger_distance
 
             if deer.check_captured(self.tiger_group):
                 deer.reward += PREY_COST_CAPTURED
                 for tiger in self.tiger_group:
                     if tiger.is_close(deer):
                         tiger.reward += PREDATOR_REWARD_CAPTURE
+
+            deer.reward += PREY_REWARD_MOVE
+            # todo: utilize position memory of deer to evade the tiger
 
         if self.game_over():
             if not self.tiger_wins():
@@ -154,9 +158,11 @@ class Env:
             specific_group.add(agent)
             agents.append(agent)
         return agents
-    def set_deer_epsilon(self, deer_epsilon = 0.4):
+
+    def set_deer_epsilon(self, deer_epsilon=0.4):
         for deer in self.deer_group:
             deer.epsilon = deer_epsilon
+
     def update_deer_epsilon(self, current_episode=1, num_episodes=1):
         for deer in self.deer_group:
             deer.epsilon = deer.epsilon * (1 - current_episode / (num_episodes + 1))
@@ -164,23 +170,24 @@ class Env:
     def set_tiger_epsilon(self, tiger_epsilon=0.4):
         for tiger in self.tiger_group:
             tiger.epsilon = tiger_epsilon
+
     def update_tiger_epsilon(self, current_episode=1, num_episodes=1):
         for tiger in self.tiger_group:
             tiger.epsilon = tiger.epsilon * (1 - current_episode / (num_episodes + 1))
 
-    def training(self, num_episodes, case='only tiger', path='./train/'):
+    def training(self, num_episodes, train_condition, path='./train/'):
         tiger_wins = 0
         deer_wins = 0
         hist = dict(tiger_wins=[], deer_wins=[], num_games=[],
-                    states_visited_tiger=[], states_visited_deer=[],q_sum=[])
+                    states_visited_tiger=[], states_visited_deer=[], q_sum=[])
         for episode in range(num_episodes):
-            if case=='only tiger':
-                self.update_tiger_epsilon()
-            elif case =='only deer':
-                self.update_deer_epsilon()
-            elif case =='both':
-                self.update_deer_epsilon()
-                self.update_tiger_epsilon()
+            if train_condition == 'only tiger':
+                self.update_tiger_epsilon(current_episode=episode, num_episodes=num_episodes)
+            elif train_condition == 'only deer':
+                self.update_deer_epsilon(current_episode=episode, num_episodes=num_episodes)
+            elif train_condition == 'both':
+                self.update_deer_epsilon(current_episode=episode, num_episodes=num_episodes)
+                self.update_tiger_epsilon(current_episode=episode, num_episodes=num_episodes)
 
             for step in range(self.n_steps):
                 self.transition()
@@ -197,7 +204,7 @@ class Env:
 
             hist["tiger_wins"].append(tiger_wins)
             hist["deer_wins"].append(deer_wins)
-            hist["num_games"].append(episode+1)
+            hist["num_games"].append(episode + 1)
             hist["states_visited_tiger"].append(states_visited_tiger)
             hist["states_visited_deer"].append(states_visited_deer)
             hist["q_sum"].append(q_sum)
@@ -209,7 +216,7 @@ class Env:
                     f'\nDeer visited {states_visited_deer} states')
             if episode % 1000 == 0:
                 self.save()
-                save_file(hist,'hist.pkl', path=path)
+                save_file(hist, 'hist.pkl', path=path)
             self.reset()
         save_file(hist, 'hist.pkl', path=path)
 
@@ -255,7 +262,7 @@ class Env:
     def simulate(self, num_games, path='./sim/'):
         tiger_wins = 0
         deer_wins = 0
-        hist = dict(tiger_wins = [], deer_wins = [], num_games = [])
+        hist = dict(tiger_wins=[], deer_wins=[], num_games=[])
 
         self.is_simulating = True
         for game in range(num_games):
@@ -271,10 +278,10 @@ class Env:
             deer_wr = 100 * deer_wins / (game + 1)
             hist["tiger_wins"].append(tiger_wins)
             hist["deer_wins"].append(deer_wins)
-            hist["num_games"].append(game+1)
+            hist["num_games"].append(game + 1)
             if (game + 1) % 10 == 0:
                 print(f'Game {game + 1}  tiger : deer = {tiger_wr}% : {deer_wr} %.')
-                save_file(hist, filename='hist.pkl',path=path)
+                save_file(hist, filename='hist.pkl', path=path)
             self.reset()
         self.is_simulating = False
         winning_ratio = 100 * tiger_wins / num_games, 100 * deer_wins / num_games
@@ -294,15 +301,15 @@ class Env:
         return len(self.deer_group) == 0 or self.steps >= self.n_steps
 
     def save(self, tiger_q_file='tq.pkl', deer_q_file='dq.pkl', path='./'):
-        with open(path+tiger_q_file, 'wb') as f:
+        with open(path + tiger_q_file, 'wb') as f:
             pickle.dump(self.tiger_Qs, f)
-        with open(path+deer_q_file, 'wb') as f:
+        with open(path + deer_q_file, 'wb') as f:
             pickle.dump(self.deer_Qs, f)
 
-    def load(self, tiger_q_file='tq.pkl', deer_q_file='dq.pkl',path='./'):
-        with open(path+tiger_q_file, 'rb') as f:
+    def load(self, tiger_q_file='tq.pkl', deer_q_file='dq.pkl', path='./'):
+        with open(path + tiger_q_file, 'rb') as f:
             self.tiger_Qs = pickle.load(f)
-        with open(path+deer_q_file, 'rb') as f:
+        with open(path + deer_q_file, 'rb') as f:
             self.deer_Qs = pickle.load(f)
         print(f'Loaded successfully. '
               f'\nTiger visited {(len(self.tiger_Qs) - 1) / 4} states'

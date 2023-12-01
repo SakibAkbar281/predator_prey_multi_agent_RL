@@ -19,7 +19,7 @@ class Agent(pygame.sprite.Sprite):
         self.prev_state = -1
         self.prev_action_idx = -1
         self.alpha = 0.7
-        self.gamma = 0.618
+        self.gamma = GAMMA
         self.epsilon = 0.05  # when trained
         self.reward = 0
         self.ground = ground
@@ -109,7 +109,7 @@ class Tiger(Agent):
         self.speed = 100
         self.allowable_actions = [Vector2(1, 0), Vector2(-1, 0), Vector2(0, 1), Vector2(0, -1)]
         self.action_indices = range(len(self.allowable_actions))
-
+        self.alpha = ALPHA_TIGER
 
 class Deer(Agent):
     def __init__(self, ground):
@@ -120,9 +120,16 @@ class Deer(Agent):
         # self.allowable_actions = [Vector2(1, 0), Vector2(-1, 0),
         #                           Vector2(0, 1), Vector2(0, -1),
         #                           Vector2(1, 1), Vector2(-1, -1),
-        #                           Vector2(1, -1), Vector2(-1, 1)]
+        #                           Vector2(1, -1), Vector2(-1, 1),
+        #                           Vector2(2, 0), Vector2(-2, 0),
+        #                           Vector2(0, 2), Vector2(0, -2),
+        #                           Vector2(2, 2), Vector2(-2, -2),
+        #                           Vector2(2, -2), Vector2(-2, 2)
+        #                           ]
         self.action_indices = range(len(self.allowable_actions))
         self.got_caught = False
+        self.alpha = ALPHA_DEER
+        self.prev_closest_tiger_distance = -1
 
     def check_captured(self, tiger_group):
         n_close_tigers = 0
