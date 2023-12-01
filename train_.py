@@ -2,8 +2,7 @@ from environment import *
 from cases import *
 import itertools
 
-
-def run_simulation(case, num_episodes):
+def run_simulation(case):
     pygame.init()
 
     makedir(folder_path=case.path)
@@ -23,36 +22,20 @@ def run_simulation(case, num_episodes):
     env.set_tiger_epsilon(tiger_epsilon=case.tiger_epsilon)
 
     # Training
-    env.training(num_episodes, train_condition=case.train_condition, path=case.path)
+    env.training(case.num_episodes, train_condition=case.train_condition, path=case.path)
     env.save(path=case.path)
-    env.set_deer_epsilon(deer_epsilon=0.001)
-    env.set_tiger_epsilon(tiger_epsilon=0.001)
-    env.load(path=case.path)
 
-
-# case = Case(n_tigers=2,
-#             n_deers=1,
-#             n_steps=23,
-#             train_tiger=False,
-#             train_deer=False)
-# print(case)
-# run_simulation(case, num_episodes=10_000)
-
-cases = [(2, 1, 23, True, True),
-         (2, 1, 23, True, False),
-         (2, 1, 23, False, True),
-         (2, 1, 23, False, False),
-         (2, 2, 40, True, True),
-         (2, 2, 40, True, False),
-         (2, 2, 40, False, True),
-         (2, 2, 40, False, False),
-         (2, 2, 10, True, True),
-         (2, 2, 10, True, False),
-         (2, 2, 10, False, True),
-         (2, 2, 10, False, False)
-         ]
+# n_t, n_d, n_s, tt, td, neps
+cases = [(2, 1, 23, True, True, 10_000),
+         (2, 1, 23, True, False, 10_000),
+         (2, 1, 23, False, True, 10_000),
+         (2, 1, 23, False, False, 5_000),
+         (2, 2, 40, True, True, 20_000),
+         (2, 2, 40, True, False, 20_000),
+         (2, 2, 40, False, True, 20_000),
+         (2, 2, 40, False, False, 5_000)]
 
 for case_tuple in cases:
     case = Case(*case_tuple)
     print(case)
-    run_simulation(case, num_episodes=100)
+    run_simulation(case)
