@@ -16,35 +16,11 @@ def load_file(filename, path='./'):
     with open(path+filename, 'rb') as f:
         var = pickle.load(f)
     return var
-def get_simulation_results(game_case, sim_case):
-    sim_path = get_sim_path(game_case,sim_case)
-    hist = load_file(filename='hist.pkl', path=sim_path)
-    return hist
-
-def get_training_results(game_case, train_case):
-    train_path = get_train_path(game_case,train_case)
-    hist = load_file(filename='hist.pkl', path=train_path)
-    return hist
-
-def get_sim_path(game_case, sim_case):
-    folder_path = './' + GAME_CASES[game_case]["folder_name"] + '/' + SIM_CASES[sim_case]["folder_name"] + '/sim/'
-    return folder_path
-
-def get_train_path(game_case, train_case):
-    folder_train_path = './' + GAME_CASES[game_case]["folder_name"] + '/' + TRAIN_CASES[train_case]["folder_name"] + '/train/'
-    return folder_train_path
-
-def get_train_path_2(n_tigers, n_deers, n_steps, train_case):
-    folder_train_path = f"./{n_tigers}t{n_deers}d{n_steps}/{TRAIN_CASES[train_case]['folder_name']}/train/"
-    return folder_train_path
-
-
 
 def list_folders_in_directory(directory_path):
     # List all the folders in the specified directory
     return [item for item in os.listdir(directory_path)
             if os.path.isdir(os.path.join(directory_path, item))]
-
 
 def extract_numbers(s):
     return tuple(map(int, re.findall(r'\d+', s)))

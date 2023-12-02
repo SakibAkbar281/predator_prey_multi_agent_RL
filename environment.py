@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 from agent import *
 from config import *
 from background import *
+import warnings
+import os
 
 
 class Env:
@@ -23,6 +25,7 @@ class Env:
         self.n_steps = 20
         self.tiger_not_learning = False
         self.deer_not_learning = False
+        self.hist = None
 
     #     self.train_path = './'
     #     self.sim_path = './'
@@ -107,10 +110,10 @@ class Env:
             if deer.prev_closest_tiger_distance != -1:
                 if deer.prev_closest_tiger_distance < closest_tiger_distance:
                     deer.reward += PREY_EVASION_REWARD * (
-                                closest_tiger_distance - deer.prev_closest_tiger_distance) // 100
+                            closest_tiger_distance - deer.prev_closest_tiger_distance) // 100
                 else:
                     deer.reward += PREY_INDIFFERENCE_COST * -(
-                                closest_tiger_distance - deer.prev_closest_tiger_distance) // 100
+                            closest_tiger_distance - deer.prev_closest_tiger_distance) // 100
             deer.prev_closest_tiger_distance = closest_tiger_distance
 
             if deer.check_captured(self.tiger_group):
@@ -176,11 +179,20 @@ class Env:
             tiger.epsilon = tiger.epsilon * (1 - current_episode / (num_episodes + 1))
 
     def training(self, num_episodes, train_condition, path='./train/'):
-        tiger_wins = 0
-        deer_wins = 0
-        hist = dict(tiger_wins=[], deer_wins=[], num_games=[],
-                    states_visited_tiger=[], states_visited_deer=[], q_sum=[])
-        for episode in range(num_episodes):
+        if self.hist is None:
+            tiger_wins = 0
+            deer_wins = 0
+            start_episode = 0
+            hist = dict(tiger_wins=[], deer_wins=[], num_games=[],
+                        states_visited_tiger=[], states_visited_deer=[], q_sum=[])
+            self.hist = hist
+        else:
+            hist = self.hist
+            start_episode = hist["num_games"][-1]
+            tiger_wins = hist["tiger_wins"][-1]
+            deer_wins = hist["deer_wins"][-1]
+
+        for episode in range(start_episode, start_episode + num_episodes):
             if train_condition == 'only tiger':
                 self.update_tiger_epsilon(current_episode=episode, num_episodes=num_episodes)
             elif train_condition == 'only deer':
@@ -214,11 +226,10 @@ class Env:
                     f'Episode {episode + 1}  tiger : deer = {100 * tiger_wins / (episode + 1)}% : {100 * deer_wins / (episode + 1)} %.'
                     f'\nTiger visited {states_visited_tiger} states,'
                     f'\nDeer visited {states_visited_deer} states')
-            if episode % 1000 == 0:
+            if episode % 10 == 0:
                 self.save()
-                save_file(hist, 'hist.pkl', path=path)
             self.reset()
-        save_file(hist, 'hist.pkl', path=path)
+        self.save()
 
     def run_game(self, screen, fps=10):
         # Time
@@ -259,10 +270,9 @@ class Env:
             pygame.display.update()
             clock.tick(fps)
 
-    def simulate(self, num_games, path='./sim/'):
+    def simulate(self, num_games):
         tiger_wins = 0
         deer_wins = 0
-        hist = dict(tiger_wins=[], deer_wins=[], num_games=[])
 
         self.is_simulating = True
         for game in range(num_games):
@@ -276,16 +286,11 @@ class Env:
                 deer_wins += 1
             tiger_wr = 100 * tiger_wins / (game + 1)
             deer_wr = 100 * deer_wins / (game + 1)
-            hist["tiger_wins"].append(tiger_wins)
-            hist["deer_wins"].append(deer_wins)
-            hist["num_games"].append(game + 1)
             if (game + 1) % 10 == 0:
                 print(f'Game {game + 1}  tiger : deer = {tiger_wr}% : {deer_wr} %.')
-                save_file(hist, filename='hist.pkl', path=path)
             self.reset()
         self.is_simulating = False
         winning_ratio = 100 * tiger_wins / num_games, 100 * deer_wins / num_games
-        save_file(hist, filename='hist.pkl', path=path)
         return winning_ratio
 
     def training_step(self):
@@ -300,17 +305,29 @@ class Env:
     def game_over(self):
         return len(self.deer_group) == 0 or self.steps >= self.n_steps
 
-    def save(self, tiger_q_file='tq.pkl', deer_q_file='dq.pkl', path='./'):
-        with open(path + tiger_q_file, 'wb') as f:
-            pickle.dump(self.tiger_Qs, f)
-        with open(path + deer_q_file, 'wb') as f:
-            pickle.dump(self.deer_Qs, f)
+    def save(self, path='./'):
+        save_file(self.tiger_Qs, 'tq.pkl', path)
+        save_file(self.deer_Qs, 'dq.pkl', path)
+        save_file(self.hist, 'hist.pkl', path)
 
-    def load(self, tiger_q_file='tq.pkl', deer_q_file='dq.pkl', path='./'):
-        with open(path + tiger_q_file, 'rb') as f:
-            self.tiger_Qs = pickle.load(f)
-        with open(path + deer_q_file, 'rb') as f:
-            self.deer_Qs = pickle.load(f)
-        print(f'Loaded successfully. '
-              f'\nTiger visited {(len(self.tiger_Qs) - 1) / 4} states'
-              f'\nDeer visited  {(len(self.deer_Qs) - 1) / 4} states')
+    def load(self, path='./'):
+        try:
+            self.tiger_Qs = load_file('tq.pkl', path)
+            print(f"Tiger visited {(len(self.tiger_Qs) - 1) / 4} states")
+        except Exception as e:
+            self.tiger_Qs = {(-1, -1): 0}
+            warnings.warn(f"Failed to load tiger data: {e}", RuntimeWarning)
+
+        try:
+            self.deer_Qs = load_file('dq.pkl', path)
+            print(f"Deer visited {(len(self.deer_Qs) - 1) / 4} states")
+        except Exception as e:
+            self.deer_Qs = {(-1, -1): 0}
+            warnings.warn(f"Failed to load deer data: {e}", RuntimeWarning)
+
+        try:
+            self.hist = load_file('hist.pkl', path)
+            print(f"Number of episodes {self.hist['num_games'][-1]}")  # Ensure the key is correct here
+        except Exception as e:
+            self.hist = None
+            warnings.warn(f"Failed to load history data: {e}", RuntimeWarning)

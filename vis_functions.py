@@ -11,7 +11,8 @@ def generate_simulation_results(base_cases):
     fig, axs = plt.subplots(1, len(base_cases), figsize=(6, 3), sharex=True, sharey=True,
                             gridspec_kw={'wspace': 0.3,
                                          'hspace': 0.3})
-    axs = axs.flatten()  # Flatten the 2D array of axes to a 1D array
+    # axs = axs.flatten()  # Flatten the 2D array of axes to a 1D array
+    axs = [axs] if len(base_cases) == 1 else axs.flatten()
     fig.suptitle('Before Training')
     for ax, base_case in zip(axs, base_cases):
         hist = load_file(filename='hist.pkl', path=base_case.path)
@@ -31,7 +32,7 @@ def generate_simulation_results(base_cases):
                           rf' {100 - final_tiger_win_percentage:0.2f} $\pm$ {std:0.2f}',
                 ha='center', va='center', transform=ax.transAxes)
         ax.set_ylim(0, 100)
-    axs[1].set_xlabel('Number of Games')
+    axs[len(base_cases)-1].set_xlabel('Number of Games')
     axs[0].set_ylabel('Winning Percentage (Tigers)')
     fig.savefig('./results/fig1.png', dpi=300, format='png')
     fig.show()
@@ -41,9 +42,9 @@ def generate_after_training_plots(game_cases):
     fig, axs = plt.subplots(1, len(game_cases), figsize=(6, 3), sharex=False,
                             gridspec_kw={'wspace': 0.3,
                                          'hspace': 0.3})
-    axs = axs.flatten()  # Flatten the 2D array of axes to a 1D array
+    # axs = axs.flatten()  # Flatten the 2D array of axes to a 1D array
     fig.suptitle('After Training')
-
+    axs = [axs] if len(game_cases) == 1 else axs.flatten()
     for ax, train_cases in zip(axs, game_cases):
         for train_case in train_cases:
             if train_case.is_base_case():
@@ -60,9 +61,9 @@ def generate_after_training_plots(game_cases):
                         label=train_case.label)
             ax.set_ylim(0, 100)
 
-    axs[1].set_xlabel('Number of Episodes')
+    axs[len(game_cases)-1].set_xlabel('Number of Episodes')
     axs[0].set_ylabel('Winning Percentage (Tigers)')
-    axs[1].legend(loc='center left', bbox_to_anchor=(1.15, 0.5))
+    axs[len(game_cases)-1].legend(loc='center left', bbox_to_anchor=(1.15, 0.5))
     fig.savefig('./results/fig2.png', dpi=300, format='png')
     fig.show()
 
@@ -71,9 +72,9 @@ def generate_states_visited_plots(game_cases):
     fig, axs = plt.subplots(1, len(game_cases), figsize=(6, 3), sharex=False,
                             gridspec_kw={'wspace': 0.3,
                                          'hspace': 0.3})
-    axs = axs.flatten()  # Flatten the 2D array of axes to a 1D array
+    # axs = axs.flatten()  # Flatten the 2D array of axes to a 1D array
     # fig.suptitle('Number of States Visited by both tigers and deer')
-
+    axs = [axs] if len(game_cases) == 1 else axs.flatten()
     for ax, train_cases in zip(axs, game_cases):
         for train_case in train_cases:
             if train_case.is_base_case():
@@ -93,21 +94,22 @@ def generate_states_visited_plots(game_cases):
                  states_visited_tiger,
                  states_visited_deer,
                  neps) = get_q_history(hist)
+                if not np.all(states_visited_tiger == 0):
+                    ax.plot(neps,
+                            states_visited_tiger,
+                            color=train_case.color,
+                            linestyle='dotted',
+                            label=f'States (tiger) {train_case.label}')
+                if not np.all(states_visited_deer==0):
+                    ax.plot(neps,
+                            states_visited_deer,
+                            color=train_case.color,
+                            linestyle='-.',
+                            label=f'States (deer) {train_case.label}')
 
-                ax.plot(neps,
-                        states_visited_tiger,
-                        color=train_case.color,
-                        linestyle='dotted',
-                        label=f'States (tiger) {train_case.label}')
-                ax.plot(neps,
-                        states_visited_deer,
-                        color=train_case.color,
-                        linestyle='-.',
-                        label=f'States (deer) {train_case.label}')
-
-    axs[1].set_xlabel('Number of Episodes')
+    axs[len(game_cases)-1].set_xlabel('Number of Episodes')
     axs[0].set_ylabel('States Visited')
-    axs[1].legend(loc='center left', bbox_to_anchor=(1.15, 0.5))
+    axs[len(game_cases)-1].legend(loc='center left', bbox_to_anchor=(1.15, 0.5))
     fig.savefig('./results/fig3.png', dpi=300, format='png')
     fig.show()
 
@@ -116,9 +118,9 @@ def generate_q_conv_plots(game_cases):
     fig, axs = plt.subplots(1, len(game_cases), figsize=(6, 3), sharex=False,
                             gridspec_kw={'wspace': 0.3,
                                          'hspace': 0.3})
-    axs = axs.flatten()  # Flatten the 2D array of axes to a 1D array
+    # axs = axs.flatten()  # Flatten the 2D array of axes to a 1D array
     # fig.suptitle('Convergence of Aggregate Q values')
-
+    axs = [axs] if len(game_cases) == 1 else axs.flatten()
     for ax, train_cases in zip(axs, game_cases):
         for train_case in train_cases:
             if train_case.is_base_case():
