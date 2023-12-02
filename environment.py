@@ -92,6 +92,7 @@ class Env:
         deer_rewards = []
         for tiger in self.tiger_group:
             # Movement cost based on distance
+            tiger.reward = 0
             closest_deer_distance = min([tiger.get_distance(deer)
                                          for deer in self.deer_group], default=0)
             tiger.reward = PREDATOR_COST_PER_MOVE * closest_deer_distance // 100
@@ -104,6 +105,7 @@ class Env:
                     tiger.reward += NOT_COORDINATION_PENALTY
 
         for deer in self.deer_group:
+            deer.reward = 0
             closest_tiger_distance = min([deer.get_distance(tiger)
                                           for tiger in self.tiger_group])
 
@@ -123,7 +125,7 @@ class Env:
                         tiger.reward += PREDATOR_REWARD_CAPTURE
 
             deer.reward += PREY_REWARD_MOVE
-            # todo: utilize position memory of deer to evade the tiger
+
 
         if self.game_over():
             if not self.tiger_wins():

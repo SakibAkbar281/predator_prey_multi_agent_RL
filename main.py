@@ -10,8 +10,8 @@ ground = Background('ground.jpg', width=WIDTH, height=HEIGHT)
 case = Case(n_tigers=2,
             n_deers=1,
             n_steps=23,
-            train_tiger=True,
-            train_deer=False)
+            train_tiger=False,
+            train_deer=True)
 env = Env(ground=ground)
 env.add(case.n_tigers, case.n_deers)
 env.set_n_steps(case.n_steps)

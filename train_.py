@@ -50,7 +50,7 @@ def run_simulation(case):
 # cases = [(2, 1, 23, False, False, 100000),
 #          (2, 2, 40, False, False, 100000)]
 
-cases = [(2, 2, 40, True, False, 10_000)]
+cases = [(2, 1, 23, False, True, 10_000)]
 
 for case_tuple in cases:
     case = Case(*case_tuple)
