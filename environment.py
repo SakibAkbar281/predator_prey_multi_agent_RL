@@ -91,11 +91,10 @@ class Env:
         tiger_rewards = []
         deer_rewards = []
         for tiger in self.tiger_group:
-            # Movement cost based on distance
             tiger.reward = 0
             closest_deer_distance = min([tiger.get_distance(deer)
                                          for deer in self.deer_group], default=0)
-            tiger.reward = PREDATOR_COST_PER_MOVE * closest_deer_distance // 100
+            tiger.reward += PREDATOR_COST_PER_MOVE * closest_deer_distance // 100
             # Coordination and teamwork bonuses
             if self.tiger_group.is_well_spaced():
                 tiger.reward += TEAMWORK_BONUS
@@ -103,28 +102,33 @@ class Env:
                     tiger.reward += COORDINATION_BONUS
                 else:
                     tiger.reward += NOT_COORDINATION_PENALTY
+            else:
+                tiger.reward -= TEAMWORK_BONUS//5
 
         for deer in self.deer_group:
             deer.reward = 0
-            closest_tiger_distance = min([deer.get_distance(tiger)
-                                          for tiger in self.tiger_group])
+            closest_two_tiger_distance_avg = sum(sorted([deer.get_distance(tiger)
+                                                         for tiger in self.tiger_group])[:2]) / 2.0
 
             if deer.prev_closest_tiger_distance != -1:
-                if deer.prev_closest_tiger_distance < closest_tiger_distance:
-                    deer.reward += PREY_EVASION_REWARD * (
-                            closest_tiger_distance - deer.prev_closest_tiger_distance) // 100
+                if deer.prev_closest_tiger_distance < closest_two_tiger_distance_avg:
+                    deer.reward += PREY_EVASION_REWARD
+                    # deer.reward += PREY_EVASION_REWARD * (
+                    #         closest_two_tiger_distance_avg - deer.prev_closest_tiger_distance) // 100
                 else:
-                    deer.reward += PREY_INDIFFERENCE_COST * -(
-                            closest_tiger_distance - deer.prev_closest_tiger_distance) // 100
-            deer.prev_closest_tiger_distance = closest_tiger_distance
+                    deer.reward += PREY_INDIFFERENCE_COST
+                    # deer.reward += PREY_INDIFFERENCE_COST * -(
+                    #         closest_two_tiger_distance_avg - deer.prev_closest_tiger_distance) // 100
+
+            deer.prev_closest_tiger_distance = closest_two_tiger_distance_avg
 
             if deer.check_captured(self.tiger_group):
                 deer.reward += PREY_COST_CAPTURED
                 for tiger in self.tiger_group:
                     if tiger.is_close(deer):
                         tiger.reward += PREDATOR_REWARD_CAPTURE
-
-            deer.reward += PREY_REWARD_MOVE
+            else:
+                deer.reward += PREY_REWARD_MOVE
 
 
         if self.game_over():
@@ -228,10 +232,9 @@ class Env:
                     f'Episode {episode + 1}  tiger : deer = {100 * tiger_wins / (episode + 1)}% : {100 * deer_wins / (episode + 1)} %.'
                     f'\nTiger visited {states_visited_tiger} states,'
                     f'\nDeer visited {states_visited_deer} states')
-            if episode % 10 == 0:
-                self.save()
+                self.save(path)
             self.reset()
-        self.save()
+        self.save(path)
 
     def run_game(self, screen, fps=10):
         # Time

@@ -15,7 +15,7 @@ class Case:
                     f"{tiger_training_condition}t{deer_training_condition}d/"
         self.title = f"{n_tigers} Tigers Vs. {n_deers} Deer ({n_steps} steps)"
         self.tiger_epsilon = 0.4 if train_tiger else 1.0
-        self.deer_epsilon = 0.4 if train_deer else 1.0
+        self.deer_epsilon = 0.6 if train_deer else 1.0
         self.train_condition = {
             (True, True): 'both',
             (True, False): 'only_deer',

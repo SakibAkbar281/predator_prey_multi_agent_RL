@@ -153,16 +153,11 @@ class TigerGroup(pygame.sprite.Group):
         super().__init__(*sprites)
 
     def is_coordinated(self, deer_group):
-
         for deer in deer_group:
-            # Calculate angles or positions relative to the deer for each tiger
-            # Example: Check if tigers are approaching from different angles
             angles = []
             for tiger in self.sprites():
                 angle = calculate_angle(tiger, deer)  # Define this function
                 angles.append(angle)
-            # print(angles)
-            # Check if the angles are sufficiently different (e.g., more than 90 degrees apart)
             if not is_sufficiently_different(angles):  # Define this function
                 return False
         return True
