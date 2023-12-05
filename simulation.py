@@ -11,7 +11,7 @@ clock = pygame.time.Clock()
 
 # Background
 ground = Background('ground.jpg', width=WIDTH, height=HEIGHT)
-case = Case(2,1,23,False,True)
+case = Case(2,2,40,True,True)
 # Creating agents
 env = Env(ground=ground)
 env.add(case.n_tigers, case.n_deers)
@@ -23,3 +23,4 @@ env.set_tiger_epsilon(tiger_epsilon=case.tiger_epsilon)
 env.load(path=case.path)
 tiger_wr, deer_wr = env.simulate(num_games=5000)
 print(f'final winning ratio: {tiger_wr} : {deer_wr}')
+env.run_game(screen,fps=2)

@@ -7,8 +7,8 @@ import scienceplots
 plt.style.use(['science', 'ieee'])
 
 
-def generate_simulation_results(base_cases):
-    fig, axs = plt.subplots(1, len(base_cases), figsize=(6, 3), sharex=True, sharey=True,
+def generate_simulation_results(base_cases, ext='png'):
+    fig, axs = plt.subplots(1, len(base_cases), figsize=(6, 3), sharex=False, sharey=True,
                             gridspec_kw={'wspace': 0.3,
                                          'hspace': 0.3})
     # axs = axs.flatten()  # Flatten the 2D array of axes to a 1D array
@@ -34,11 +34,11 @@ def generate_simulation_results(base_cases):
         ax.set_ylim(0, 100)
     axs[len(base_cases)-1].set_xlabel('Number of Games')
     axs[0].set_ylabel('Winning Percentage (Tigers)')
-    fig.savefig('./results/fig1.png', dpi=300, format='png')
+    fig.savefig(f'./results/fig1.{ext}', dpi=300, format=f'{ext}')
     fig.show()
 
 
-def generate_after_training_plots(game_cases):
+def generate_after_training_plots(game_cases, ext ='png'):
     fig, axs = plt.subplots(1, len(game_cases), figsize=(6, 3), sharex=False,
                             gridspec_kw={'wspace': 0.3,
                                          'hspace': 0.3})
@@ -64,11 +64,11 @@ def generate_after_training_plots(game_cases):
     axs[len(game_cases)-1].set_xlabel('Number of Episodes')
     axs[0].set_ylabel('Winning Percentage (Tigers)')
     axs[len(game_cases)-1].legend(loc='center left', bbox_to_anchor=(1.15, 0.5))
-    fig.savefig('./results/fig2.png', dpi=300, format='png')
+    fig.savefig(f'./results/fig2.{ext}', dpi=300, format=f'{ext}')
     fig.show()
 
 
-def generate_states_visited_plots(game_cases):
+def generate_states_visited_plots(game_cases, ext ='png'):
     fig, axs = plt.subplots(1, len(game_cases), figsize=(6, 3), sharex=False,
                             gridspec_kw={'wspace': 0.3,
                                          'hspace': 0.3})
@@ -110,11 +110,11 @@ def generate_states_visited_plots(game_cases):
     axs[len(game_cases)-1].set_xlabel('Number of Episodes')
     axs[0].set_ylabel('States Visited')
     axs[len(game_cases)-1].legend(loc='center left', bbox_to_anchor=(1.15, 0.5))
-    fig.savefig('./results/fig3.png', dpi=300, format='png')
+    fig.savefig(f'./results/fig3.{ext}', dpi=300, format=f'{ext}')
     fig.show()
 
 
-def generate_q_conv_plots(game_cases):
+def generate_q_conv_plots(game_cases, ext ='png'):
     fig, axs = plt.subplots(1, len(game_cases), figsize=(6, 3), sharex=False,
                             gridspec_kw={'wspace': 0.3,
                                          'hspace': 0.3})
@@ -141,5 +141,5 @@ def generate_q_conv_plots(game_cases):
     axs[len(game_cases) - 1].set_xlabel('Number of Episodes')
     axs[0].set_ylabel('Aggregate Q')
     axs[len(game_cases) - 1].legend(loc='center left', bbox_to_anchor=(1.15, 0.5))
-    fig.savefig('./results/fig4.png', dpi=300, format='png')
+    fig.savefig(f'./results/fig4.{ext}', dpi=300, format=f'{ext}')
     fig.show()

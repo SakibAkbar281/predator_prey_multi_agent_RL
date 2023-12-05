@@ -12,7 +12,7 @@ game_cases = get_all_trained_cases()
 base_cases = get_base_cases(game_cases)
 
 # Figure 1
-generate_simulation_results(base_cases)
-generate_after_training_plots(game_cases)
-generate_states_visited_plots(game_cases)
-generate_q_conv_plots(game_cases)
+generate_simulation_results(base_cases, ext='svg')
+generate_after_training_plots(game_cases, ext='svg')
+generate_states_visited_plots(game_cases, ext='svg')
+generate_q_conv_plots(game_cases, ext='svg')
