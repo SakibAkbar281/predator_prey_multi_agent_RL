@@ -11,7 +11,7 @@ clock = pygame.time.Clock()
 
 # Background
 ground = Background('ground.jpg', width=WIDTH, height=HEIGHT)
-case = Case(2,2,40,True,True)
+case = Case(2,2,40,True,False)
 # Creating agents
 env = Env(ground=ground)
 env.add(case.n_tigers, case.n_deers)
