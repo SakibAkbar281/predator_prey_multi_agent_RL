@@ -118,8 +118,13 @@ class Deer(Agent):
     def __init__(self, ground):
         super().__init__('deer.png', width=100, height=100, ground=ground)
         self.speed = 100
+
         # self.allowable_actions = [Vector2(1, 0), Vector2(-1, 0),
         #                           Vector2(0, 1), Vector2(0, -1)]
+        # self.allowable_actions = [Vector2(1, 0), Vector2(-1, 0),
+        #                           Vector2(0, 1), Vector2(0, -1),
+        #                           Vector2(1, 1), Vector2(-1, -1),
+        #                           Vector2(1, -1), Vector2(-1, 1)]
         self.allowable_actions = [Vector2(1, 0), Vector2(-1, 0),
                                   Vector2(0, 1), Vector2(0, -1),
                                   Vector2(1, 1), Vector2(-1, -1),
@@ -127,8 +132,7 @@ class Deer(Agent):
                                   Vector2(2, 0), Vector2(-2, 0),
                                   Vector2(0, 2), Vector2(0, -2),
                                   Vector2(2, 2), Vector2(-2, -2),
-                                  Vector2(2, -2), Vector2(-2, 2)
-                                  ]
+                                  Vector2(2, -2), Vector2(-2, 2)]
         self.action_indices = range(len(self.allowable_actions))
         self.got_caught = False
         self.alpha = ALPHA_DEER
@@ -137,16 +141,20 @@ class Deer(Agent):
 
     def check_captured(self, tiger_group):
         n_close_tigers = 0
+        n_tigers = len(tiger_group)
         for tiger in tiger_group:
             if self.is_close(tiger):
                 n_close_tigers += 1
-
-        return n_close_tigers >= MIN_NUM_CAPTURING_TIGERS
+        if n_tigers ==1:
+            return n_close_tigers >= 1
+        else:
+            return n_close_tigers >= 2
 
 
 class TigerGroup(pygame.sprite.Group):
     def __init__(self, *sprites):
         super().__init__(*sprites)
+        self.n_actions = None
 
     def is_coordinated(self, deer_group):
         for deer in deer_group:
@@ -176,3 +184,4 @@ class DeerGroup(pygame.sprite.Group):
     def __init__(self, *sprites):
         super().__init__(*sprites)
         self.number_of_members = None
+        self.n_actions = None

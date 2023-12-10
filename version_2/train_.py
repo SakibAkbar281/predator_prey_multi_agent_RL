@@ -37,7 +37,13 @@ def run_simulation(case, merge=True):
 #          (2, 2, 40, False, False, 50_000)]
 
 
-cases = [(1, 1, 43, True, False, 10000)]
+# cases = [(1, 1, 43, True, False, 10000)]
+
+cases = [(2, 1, 43, True, False, 39700),
+         (2, 1, 43, False, True, 39700),
+         (2, 1, 43, True, True, 39600),
+         (2, 1, 43, False, False, 5000)]
+
 # cases = [(2, 2, 40, True, True, 10_000),
 #          (2, 2, 40, True, False, 20_000),
 #          (2, 2, 40, False, True, 20_000),

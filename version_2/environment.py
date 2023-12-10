@@ -6,7 +6,7 @@ from config import *
 from background import *
 import warnings
 import os
-
+from moviepy.editor import ImageSequenceClip
 
 class Env:
     def __init__(self, ground):  # create tigers and deers
@@ -93,6 +93,7 @@ class Env:
             sprite.kill()
         self.add(n_tigers=self.n_tigers, n_deers=self.n_deers)
 
+
     def reward_of(self):
         tiger_rewards = []
         deer_rewards = []
@@ -156,9 +157,9 @@ class Env:
         return tiger_rewards, deer_rewards
 
     def get_state(self):
-        tiger_positions = frozenset({tuple(tiger.pos) for tiger in self.tiger_group})
-        deer_positions = frozenset({tuple(deer.pos) for deer in self.deer_group})
-        return hash((tiger_positions, deer_positions))
+        tiger_positions = tuple(tuple(tiger.pos) for tiger in self.tiger_group)
+        deer_positions = tuple(tuple(deer.pos) for deer in self.deer_group)
+        return hash((tiger_positions, deer_positions)) # todo: if one deer dies during the gameplay, state will be different
 
     def _create_agents(self, agent_class, count, all_sprites, specific_group):
         agents = []
@@ -169,7 +170,7 @@ class Env:
                 max_x = (WIDTH + 50) // 100
                 max_y = (HEIGHT + 50) // 100
                 if count == 1:
-                    xy_coordinates = [(50, 50), (WIDTH - 50, HEIGHT - 50)]
+                    xy_coordinates = [(50, 50), (50,HEIGHT-50), (WIDTH-50, 50), (WIDTH - 50, HEIGHT - 50)]
                     init_pos = Vector2(random.choice(xy_coordinates))
                 else:
                     x_coordinates = [50 + 100 * x for x in range(0, max_x, 4)]
@@ -180,8 +181,12 @@ class Env:
                 if not agent.is_obstructed(agent.rect, all_sprites):
                     # print("An agent landed on ", agent.pos)
                     break
+
             all_sprites.add(agent)
             specific_group.add(agent)
+            if specific_group.n_actions is None:
+                n_actions = len(agent.allowable_actions)
+                specific_group.n_actions = n_actions
             agents.append(agent)
         return agents
 
@@ -233,8 +238,8 @@ class Env:
             else:
                 deer_wins += 1
 
-            states_visited_tiger = (len(self.tiger_Qs) - 1) / 4
-            states_visited_deer = (len(self.deer_Qs) - 1) / 4
+            states_visited_tiger = (len(self.tiger_Qs) - 1) / self.tiger_group.n_actions
+            states_visited_deer = (len(self.deer_Qs) - 1) / self.deer_group.n_actions
             q_sum = sum(self.tiger_Qs.values()) + sum(self.deer_Qs.values())
 
             hist["tiger_wins"].append(tiger_wins)
@@ -254,13 +259,15 @@ class Env:
         self.save(path)
         self.is_training = False
 
-    def run_game(self, screen, fps=10):
+    def run_game(self, screen, fps=10, path ='./', name=''):
         # Time
         clock = pygame.time.Clock()
         deer_win_text = Text("Deer win")
         tiger_win_text = Text("Tigers win")
         tiger_scores = 0
         deer_scores = 0
+        frames = []
+        frame_count = 0
         while True:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -272,12 +279,17 @@ class Env:
             deer_scores += sum(deer_reward_list)
 
             self.all_sprites.draw(screen)  # Draw all sprites
-            score_tigers = Text(f'Tiger Score: {tiger_scores}')
-            score_deers = Text(f'Deer Score: {deer_scores}')
+            # score_tigers = Text(f'Tiger Score: {tiger_scores}')
+            # score_deers = Text(f'Deer Score: {deer_scores}')
             steps_text = Text(f"Steps: {self.steps}")
-            screen.blit(score_tigers(), dest=(10, 10))
-            screen.blit(score_deers(), dest=(10, 50))
+            # screen.blit(score_tigers(), dest=(10, 10))
+            # screen.blit(score_deers(), dest=(10, 50))
             screen.blit(steps_text(), dest=(WIDTH - steps_text.get_size().x - 10, 10))
+            # Capture the frame
+            frame_name = f"{path}frame_{frame_count}.png"
+            pygame.image.save(screen, frame_name)
+            frames.append(frame_name)
+            frame_count += 1
 
             # Check for game end conditions
             if self.game_over():
@@ -287,11 +299,20 @@ class Env:
                     screen.blit(deer_win_text(), dest=deer_win_text.center_of(self.ground.rect))
                 pygame.display.update()
                 pygame.time.delay(5000)
+                self.make_movie(frames=frames,fps=fps,path=path,name=name)
                 pygame.quit()
                 exit()
 
             pygame.display.update()
             clock.tick(fps)
+
+    def make_movie(self, frames, fps=10,path= './', name=''):
+        clip = ImageSequenceClip(frames, fps=fps)
+        clip.write_videofile(f"{path}movie_{name}.mp4")
+
+        for frame in frames:
+            os.remove(frame)
+
 
     def simulate(self, num_games):
         tiger_wins = 0
@@ -315,13 +336,6 @@ class Env:
         self.is_simulating = False
         winning_ratio = 100 * tiger_wins / num_games, 100 * deer_wins / num_games
         return winning_ratio
-
-    def training_step(self):
-        pass
-
-    def plot_states_visited(self):
-        pass
-
 
     def tiger_wins(self):
         if self.is_training:

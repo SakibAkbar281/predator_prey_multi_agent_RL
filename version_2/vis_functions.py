@@ -28,7 +28,7 @@ def generate_simulation_results(base_cases, ext='png'):
                         alpha=0.2)
         ax.plot(num_games, final_tiger_win_percentage * np.ones_like(num_games),
                 label='Converged Tiger Winning Percentage')
-        ax.text(0.5, 0.8, rf'Tiger: Deer \\ = {final_tiger_win_percentage:0.2f} $\pm$ {std:0.2f} :'
+        ax.text(0.5, 0.4, rf'Tiger: Deer \\ = {final_tiger_win_percentage:0.2f} $\pm$ {std:0.2f} :'
                           rf' {100 - final_tiger_win_percentage:0.2f} $\pm$ {std:0.2f}',
                 ha='center', va='center', transform=ax.transAxes)
         ax.set_ylim(0, 100)
@@ -50,6 +50,7 @@ def generate_after_training_plots(game_cases, ext ='png'):
             if train_case.is_base_case():
                 hist = load_file(filename='hist.pkl', path=train_case.path)
                 _, num_games, baseline_ftwp = calculate_winning_ratio(hist)
+                num_games = np.arange(40000)
                 ax.set_title(train_case.title)
                 ax.plot(num_games, baseline_ftwp * np.ones_like(num_games), color=train_case.color, linewidth=2,
                         linestyle='dashed',

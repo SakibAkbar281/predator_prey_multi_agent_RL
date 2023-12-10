@@ -1,5 +1,5 @@
 import math
-
+from config import *
 
 class Case:
     def __init__(self, n_tigers, n_deers, n_steps, train_tiger, train_deer, num_episodes=100):
@@ -13,7 +13,7 @@ class Case:
 
         self.path = f"./data/{n_tigers}t{n_deers}d{n_steps}/" \
                     f"{tiger_training_condition}t{deer_training_condition}d/"
-        self.title = f"{n_tigers} Tigers Vs. {n_deers} Deer ({n_steps} steps)"
+        self.title = f"{n_tigers} Tigers Vs {n_deers} Deer ({n_steps} steps)"
         self.tiger_epsilon = 0.4 if train_tiger else 1.0
         self.deer_epsilon = 0.4 if train_deer else 1.0
         self.train_condition = {
@@ -24,16 +24,16 @@ class Case:
         }[(train_deer, train_tiger)]
         s = 0
         for n_d in range(1, n_deers+1):
-            s += math.perm(25, n_d + n_tigers) / (n_tigers * n_d)
+            s += math.perm(WIDTH*HEIGHT//10000, n_d + n_tigers)
         self.total_states = s
         if self.train_condition == 'both':
-            self.label = 'Trained Tiger Vs. Trained Deer'
+            self.label = 'Trained Tiger Vs Trained Deer'
             self.color = 'orange'
         if self.train_condition == 'only_deer':
-            self.label = 'Untrained Tiger Vs. Trained Deer'
+            self.label = 'Untrained Tiger Vs Trained Deer'
             self.color = 'darkred'
         if self.train_condition == 'only_tiger':
-            self.label = 'Trained Tiger Vs. Untrained Deer'
+            self.label = 'Trained Tiger Vs Untrained Deer'
             self.color = 'navy'
         if self.train_condition == 'none':
             self.label = 'Baseline'
